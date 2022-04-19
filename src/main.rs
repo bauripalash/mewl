@@ -1,11 +1,13 @@
-#![allow(dead_code)]
 #![allow(unused_assignments)]
-#![allow(unused_variables)]
-use std::{collections::HashMap, process::exit};
+use std::collections::HashMap;
+use std::process::exit;
+
+const OPERATORS : [&str;5] = ["+" , "-" , "*"  , "/" , "::"];
+
 
 #[derive(Debug, Clone)]
 enum Atom {
-    Sym(String),
+    Sym(MewToken),
     Number(f64),
 }
 
@@ -22,17 +24,12 @@ struct MewToken {
 }
 
 fn main() {
-    let mut sym_table: HashMap<String, f64> = HashMap::new();
-    sym_table.insert("age".to_string(), 20.0);
-    let a = "[:: [+ mew mewmew]]
-    mewmew pop
-    palash
-    hello";
+    let a = "[:: [+ mewmew dog ]]";
     let mut source_input = a.to_string();
     source_input.push('\n');
-    source_input.push(' '); // without these last statements are not being parser; TODO: Fix this
+    source_input.push(' '); // without these last statements are not being parser; TODO: Fix this, if possible
 
-    let _ = MewlParser::new(source_input).parse();
+    MewlParser::new(source_input).parse();
 }
 
 #[allow(dead_code)]
@@ -52,27 +49,21 @@ impl MewlParser {
         }
     }
 
-    fn poktoken(&mut self) -> String {
-        self.tokens.drain(..1).collect()
+    fn poktoken(&self, tokens: &mut Vec<MewToken>) -> MewToken {
+        tokens.drain(..1).next().unwrap()
     }
 
-    fn read_atom(&self) -> Atom {
-        unimplemented!()
-    }
-
-    fn extract_atom(&self) -> Option<f64> {
-        unimplemented!();
-    }
-
+    
+    
     fn get_tokens(&self) -> Vec<MewToken> {
         let raw_toks: Vec<char> = self.source.chars().collect();
-        //println!("{:?}" , raw_toks);
+        // println!("{:?}" , raw_toks);
         let mut output: Vec<MewToken> = vec![];
         let mut curp: usize = 0; //current position of of reader
         let mut curtok: String = String::new(); //current token; blank at first and later filled
         let mut line_no: usize = 1; //current line number; for the function show_nice_error()
         while curp < raw_toks.len() {
-            //The below hack feels a little complex;
+            // The below hack feels a little complex;
             // Skip whitespaces and tabs
             // as soon as we find a non-space char; we start pushing the next chars
             // to the `curtok` variable [continued...]
@@ -89,11 +80,11 @@ impl MewlParser {
                 curp += 1;
             }
 
-            //END of WHITESPACE skipping loop
+            // END of WHITESPACE skipping loop
 
-            //if we reached here; that means we have found a whitespace or tab char;
-            //so now we should a filled `curtok`
-            //we prepare a `Token` with position data and push the final token to the `output` variable
+            // if we reached here; that means we have found a whitespace or tab char;
+            // so now we should a filled `curtok`
+            // we prepare a `Token` with position data and push the final token to the `output` variable
             if !curtok.is_empty() {
                 let temp_token = MewToken {
                     lexeme: curtok.clone(),
@@ -111,10 +102,212 @@ impl MewlParser {
         output
     }
 
-    fn parse(&mut self) -> Vec<Expr> {
-        let mytoks = self.get_tokens();
-        self.show_nice_error(&mytoks[10], "This wasn't supposed to happen!".to_string());
-        Vec::new() // parser will be the main function of the parser; returns are unnecessary
+    fn parse(&mut self) {
+        let mut mytoks = self.get_tokens();
+        let mut token_list: Vec<Expr> = vec![];
+        while !mytoks.is_empty() {
+            token_list.push(Expr::List(self.parse_raw_tokens(&mut mytoks)));
+        }
+        let _ = self.evaluate(&mut Expr::List(token_list), &mut HashMap::new());
+        //println!("{:?}" , ev);
+        //println!("{:#?}" , token_list);
+        //token_list
+    }
+
+    fn evaluate(
+        &mut self,
+        exp: &mut Expr,
+        symbol_table: &mut HashMap<String, f64>,
+    ) -> Atom {
+        
+
+        match exp{
+            
+            Expr::Atom(atom) => {
+                match atom{
+                    
+                    Atom::Number(_) => {atom.to_owned()}
+                    Atom::Sym(atom_symbol) => {
+                        
+                        if OPERATORS.contains(&atom_symbol.lexeme.as_str()){
+                            return atom.to_owned();
+                        }
+                        
+                        let variable_value = symbol_table.get(&atom_symbol.lexeme);
+
+                        if let Some(..) = variable_value{
+                            Atom::Number(*variable_value.unwrap())
+                        }else{
+                            
+                            self.show_nice_error(atom_symbol, "Sorry! I dont know the value of this variable".to_string());
+                            exit(1);
+                        }
+
+                    }
+
+
+                }
+            }
+
+            Expr::List(expr_list) => {
+               
+               let mut atom_list : Vec<Atom> = vec![];
+
+               for item in expr_list.iter_mut(){
+                   
+                   atom_list.push(self.evaluate(item, symbol_table))
+               }
+
+               let current_operator : Vec<Atom> = atom_list.drain(..1).collect();
+                
+               match &current_operator[0] {
+                   Atom::Number(_) => {return current_operator[0].clone();}
+                   Atom::Sym(symbol)=>{
+                        
+                       if OPERATORS.contains(&symbol.lexeme.as_str()){
+                            return self.do_binary_operation(symbol.lexeme.as_str(), atom_list);
+                       }else{
+                        self.show_nice_error(symbol, "Unexpected Atom; I don't know, what to do with this!".to_string());
+                        //exit(1);
+                       }
+
+                   }
+
+                   
+               }
+
+
+                self.evaluate(&mut expr_list[0], symbol_table)
+
+
+
+
+            }
+
+        }
+        
+
+
+    }
+    
+    fn extract_atom(&self , atom : &Atom ) -> Option<f64> {
+        match atom{
+            Atom::Number(atm) => { Some(*atm) }
+            _ => { None }
+        }     
+        //Some(0.0)
+
+    }
+
+    fn do_binary_operation(&self, op : &str , exp_args : Vec<Atom>) -> Atom{
+        let extracted_atom_list : Vec<Option<f64>> = exp_args.into_iter().map(|a| self.extract_atom(&a)).collect();
+        let mut result : f64 = 0.0;
+        match op {
+            
+            "+" => {
+               
+                result = extracted_atom_list.into_iter().flatten().into_iter().fold(0.0, |a,b| a+b);
+
+
+            }
+
+            "-" => {
+            /*
+            res = converted
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .fold(0.0, |a, b| a-b);
+            println!("{}" , res);*/
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .reduce(|a, b| a - b)
+                .unwrap();
+        }
+
+        "*" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .fold(1.0, |a, b| a * b);
+        }
+
+        "/" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a, b| b / a)
+                .unwrap();
+        }
+
+        "::" => {
+            println!(
+                "{}",
+                extracted_atom_list
+                    .into_iter()
+                    .flatten()
+                    .map(|s| s.to_string())
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            );
+        }
+
+        ":::" => {
+            println!(
+                "{}",
+                String::from_utf8_lossy(
+                    &extracted_atom_list
+                        .into_iter()
+                        .flatten()
+                        .map(|a| a as u8)
+                        .collect::<Vec<u8>>()
+                )
+            )
+        }
+
+
+            _ => {}
+
+        }
+        Atom::Number(result)
+    }
+
+    fn parse_raw_atom(&self, token: &MewToken) -> Atom {
+        if token.lexeme.starts_with("mew") { //TODO: Fix
+            return Atom::Number(token.lexeme.len() as f64 / 3.0);
+        }
+
+        Atom::Sym(token.to_owned())
+    }
+
+    fn parse_raw_tokens(&mut self, raw_tokens: &mut Vec<MewToken>) -> Vec<Expr> {
+        if raw_tokens.is_empty() {
+            eprintln!("No expression to parse");
+        }
+
+        let current_token = self.poktoken(raw_tokens);
+        match current_token.lexeme.as_str() {
+            "[" => {
+                let mut output_tokens: Vec<Expr> = vec![];
+                while raw_tokens[0].lexeme != *"]" {
+                    output_tokens.append(&mut self.parse_raw_tokens(raw_tokens));
+                }
+                self.poktoken(raw_tokens);
+                let output: Vec<Expr> = vec![Expr::List(output_tokens)];
+                output
+            }
+            "]" => {
+                self.show_nice_error(&current_token, "Unexpected Closing bracket!".to_string());
+                exit(1);
+            }
+            _ => {
+                let out: Vec<Expr> = vec![Expr::Atom(self.parse_raw_atom(&current_token))];
+                out
+            }
+        }
     }
 
     fn show_nice_error(&self, tok: &MewToken, err_msg: String) {
@@ -168,10 +361,6 @@ impl MewlParser {
             println!("|{}| {}", line_index + 2, o[line_index + 1])
         }
 
-        exit(1);
-    }
-
-    fn evaluate(&mut self, sym_table: &mut HashMap<String, f64>) -> Atom {
-        Atom::Number(0.0)
+        //exit(1);
     }
 }
