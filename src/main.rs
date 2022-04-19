@@ -69,8 +69,6 @@ impl MewlParser {
         let mut curtok: String = String::new(); //current token; blank at first and later filled
         let mut line_no: usize = 1; //current line number; for the function show_nice_error()
         while curp < raw_toks.len() {
-            
-
             //The below hack feels a little complex;
             // Skip whitespaces and tabs
             // as soon as we find a non-space char; we start pushing the next chars
@@ -89,9 +87,9 @@ impl MewlParser {
             }
 
             //END of WHITESPACE skipping loop
-            
+
             //if we reached here; that means we have found a whitespace or tab char;
-            //so now we should a filled `curtok` 
+            //so now we should a filled `curtok`
             //we prepare a `Token` with position data and push the final token to the `output` variable
             if !curtok.is_empty() {
                 let temp_token = MewToken {
@@ -100,7 +98,6 @@ impl MewlParser {
                 };
                 output.push(temp_token);
                 curtok = String::new();
-                
             }
 
             curp += 1;
@@ -119,16 +116,14 @@ impl MewlParser {
 
     fn show_nice_error(&self, tok: &MewToken, err_msg: String) {
         let mut xx = self.source.clone(); //cloning the source cause I don't want to mess up the origin source;
-        // the parser maybe able to catch other error; so source should not be mutated; I guess;
-        
-        
+                                          // the parser maybe able to catch other error; so source should not be mutated; I guess;
+
         //checks if the next char a linefeed char `\n` for below bug
         //BUG: If there is a linefeed char after the error token -
         //the token highlight is also including the `\n`
         let newline_next = xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()
             [tok.position.1 .1 - 1]
             == "\n";
-        
 
         xx.insert_str(
             if newline_next {
@@ -138,7 +133,6 @@ impl MewlParser {
             },
             " <-\x1b[0m",
         );
-
 
         xx.insert_str(tok.position.1 .0 - 1, " \x1b[96;1m-> ");
 
@@ -158,18 +152,20 @@ impl MewlParser {
         if !err_msg.is_empty() {
             eprintln!("\x1b[95m[Eh!] : {} \x1b[0m\n", err_msg);
         }
-        
+
         //line before the error line
         if line_index != 0 && o.len() > line_index {
             println!("|{}| {}", line_index, o[line_index - 1])
         }
         //error token's line
         println!("|{}| {}", line_index + 1, o[line_index]);
-        
+
         //next line after error
         if line_index < o.len() {
             println!("|{}| {}", line_index + 2, o[line_index + 1])
         }
+
+        exit(1);
     }
 
     fn evaluate(&mut self, sym_table: &mut HashMap<String, f64>) -> Atom {
