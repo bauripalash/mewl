@@ -2,8 +2,7 @@
 use std::collections::HashMap;
 use std::process::exit;
 
-const OPERATORS : [&str;5] = ["+" , "-" , "*"  , "/" , "::"];
-
+const OPERATORS: [&str; 5] = ["+", "-", "*", "/", "::"];
 
 #[derive(Debug, Clone)]
 enum Atom {
@@ -53,8 +52,6 @@ impl MewlParser {
         tokens.drain(..1).next().unwrap()
     }
 
-    
-    
     fn get_tokens(&self) -> Vec<MewToken> {
         let raw_toks: Vec<char> = self.source.chars().collect();
         // println!("{:?}" , raw_toks);
@@ -114,169 +111,148 @@ impl MewlParser {
         //token_list
     }
 
-    fn evaluate(
-        &mut self,
-        exp: &mut Expr,
-        symbol_table: &mut HashMap<String, f64>,
-    ) -> Atom {
-        
-
-        match exp{
-            
-            Expr::Atom(atom) => {
-                match atom{
-                    
-                    Atom::Number(_) => {atom.to_owned()}
-                    Atom::Sym(atom_symbol) => {
-                        
-                        if OPERATORS.contains(&atom_symbol.lexeme.as_str()){
-                            return atom.to_owned();
-                        }
-                        
-                        let variable_value = symbol_table.get(&atom_symbol.lexeme);
-
-                        if let Some(..) = variable_value{
-                            Atom::Number(*variable_value.unwrap())
-                        }else{
-                            
-                            self.show_nice_error(atom_symbol, "Sorry! I dont know the value of this variable".to_string());
-                            exit(1);
-                        }
-
+    fn evaluate(&mut self, exp: &mut Expr, symbol_table: &mut HashMap<String, f64>) -> Atom {
+        match exp {
+            Expr::Atom(atom) => match atom {
+                Atom::Number(_) => atom.to_owned(),
+                Atom::Sym(atom_symbol) => {
+                    if OPERATORS.contains(&atom_symbol.lexeme.as_str()) {
+                        return atom.to_owned();
                     }
 
+                    let variable_value = symbol_table.get(&atom_symbol.lexeme);
 
+                    if let Some(..) = variable_value {
+                        Atom::Number(*variable_value.unwrap())
+                    } else {
+                        self.show_nice_error(
+                            atom_symbol,
+                            "Sorry! I dont know the value of this variable".to_string(),
+                        );
+                        exit(1);
+                    }
                 }
-            }
+            },
 
             Expr::List(expr_list) => {
-               
-               let mut atom_list : Vec<Atom> = vec![];
+                let mut atom_list: Vec<Atom> = vec![];
 
-               for item in expr_list.iter_mut(){
-                   
-                   atom_list.push(self.evaluate(item, symbol_table))
-               }
+                for item in expr_list.iter_mut() {
+                    atom_list.push(self.evaluate(item, symbol_table))
+                }
 
-               let current_operator : Vec<Atom> = atom_list.drain(..1).collect();
-                
-               match &current_operator[0] {
-                   Atom::Number(_) => {return current_operator[0].clone();}
-                   Atom::Sym(symbol)=>{
-                        
-                       if OPERATORS.contains(&symbol.lexeme.as_str()){
+                let current_operator: Vec<Atom> = atom_list.drain(..1).collect();
+
+                match &current_operator[0] {
+                    Atom::Number(_) => {
+                        return current_operator[0].clone();
+                    }
+                    Atom::Sym(symbol) => {
+                        if OPERATORS.contains(&symbol.lexeme.as_str()) {
                             return self.do_binary_operation(symbol.lexeme.as_str(), atom_list);
-                       }else{
-                        self.show_nice_error(symbol, "Unexpected Atom; I don't know, what to do with this!".to_string());
-                        //exit(1);
-                       }
-
-                   }
-
-                   
-               }
-
+                        } else {
+                            self.show_nice_error(
+                                symbol,
+                                "Unexpected Atom; I don't know, what to do with this!".to_string(),
+                            );
+                            //exit(1);
+                        }
+                    }
+                }
 
                 self.evaluate(&mut expr_list[0], symbol_table)
-
-
-
-
             }
-
         }
-        
-
-
     }
-    
-    fn extract_atom(&self , atom : &Atom ) -> Option<f64> {
-        match atom{
-            Atom::Number(atm) => { Some(*atm) }
-            _ => { None }
-        }     
+
+    fn extract_atom(&self, atom: &Atom) -> Option<f64> {
+        match atom {
+            Atom::Number(atm) => Some(*atm),
+            _ => None,
+        }
         //Some(0.0)
-
     }
 
-    fn do_binary_operation(&self, op : &str , exp_args : Vec<Atom>) -> Atom{
-        let extracted_atom_list : Vec<Option<f64>> = exp_args.into_iter().map(|a| self.extract_atom(&a)).collect();
-        let mut result : f64 = 0.0;
+    fn do_binary_operation(&self, op: &str, exp_args: Vec<Atom>) -> Atom {
+        let extracted_atom_list: Vec<Option<f64>> = exp_args
+            .into_iter()
+            .map(|a| self.extract_atom(&a))
+            .collect();
+        let mut result: f64 = 0.0;
         match op {
-            
             "+" => {
-               
-                result = extracted_atom_list.into_iter().flatten().into_iter().fold(0.0, |a,b| a+b);
-
-
+                result = extracted_atom_list
+                    .into_iter()
+                    .flatten()
+                    .into_iter()
+                    .fold(0.0, |a, b| a + b);
             }
 
             "-" => {
-            /*
-            res = converted
-                .into_iter()
-                .flatten()
-                .into_iter()
-                .fold(0.0, |a, b| a-b);
-            println!("{}" , res);*/
-            result = extracted_atom_list
-                .into_iter()
-                .flatten()
-                .reduce(|a, b| a - b)
-                .unwrap();
-        }
-
-        "*" => {
-            result = extracted_atom_list
-                .into_iter()
-                .flatten()
-                .into_iter()
-                .fold(1.0, |a, b| a * b);
-        }
-
-        "/" => {
-            result = extracted_atom_list
-                .into_iter()
-                .flatten()
-                .into_iter()
-                .reduce(|a, b| b / a)
-                .unwrap();
-        }
-
-        "::" => {
-            println!(
-                "{}",
-                extracted_atom_list
+                /*
+                res = converted
                     .into_iter()
                     .flatten()
-                    .map(|s| s.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" ")
-            );
-        }
+                    .into_iter()
+                    .fold(0.0, |a, b| a-b);
+                println!("{}" , res);*/
+                result = extracted_atom_list
+                    .into_iter()
+                    .flatten()
+                    .reduce(|a, b| a - b)
+                    .unwrap();
+            }
 
-        ":::" => {
-            println!(
-                "{}",
-                String::from_utf8_lossy(
-                    &extracted_atom_list
+            "*" => {
+                result = extracted_atom_list
+                    .into_iter()
+                    .flatten()
+                    .into_iter()
+                    .fold(1.0, |a, b| a * b);
+            }
+
+            "/" => {
+                result = extracted_atom_list
+                    .into_iter()
+                    .flatten()
+                    .into_iter()
+                    .reduce(|a, b| b / a)
+                    .unwrap();
+            }
+
+            "::" => {
+                println!(
+                    "{}",
+                    extracted_atom_list
                         .into_iter()
                         .flatten()
-                        .map(|a| a as u8)
-                        .collect::<Vec<u8>>()
-                )
-            )
-        }
+                        .map(|s| s.to_string())
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                );
+            }
 
+            ":::" => {
+                println!(
+                    "{}",
+                    String::from_utf8_lossy(
+                        &extracted_atom_list
+                            .into_iter()
+                            .flatten()
+                            .map(|a| a as u8)
+                            .collect::<Vec<u8>>()
+                    )
+                )
+            }
 
             _ => {}
-
         }
         Atom::Number(result)
     }
 
     fn parse_raw_atom(&self, token: &MewToken) -> Atom {
-        if token.lexeme.starts_with("mew") { //TODO: Fix
+        if token.lexeme.starts_with("mew") {
+            //TODO: Fix
             return Atom::Number(token.lexeme.len() as f64 / 3.0);
         }
 
