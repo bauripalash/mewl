@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_assignments)]
+#![allow(unused_variables)]
 use std::{collections::HashMap, process::exit};
 
 #[derive(Debug, Clone)]
