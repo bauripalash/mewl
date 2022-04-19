@@ -15,14 +15,14 @@ enum Expr {
 #[derive(Debug, Clone)]
 struct MewToken {
     lexeme: String,
-    position: (usize, usize), //[line number, column position]
+    position: (usize, (usize, usize)), //[line number, column position]
 }
 
 fn main() {
     let mut sym_table: HashMap<String, f64> = HashMap::new();
     sym_table.insert("age".to_string(), 20.0);
     let a = "[:: [+ mew mewmew]]
-    mewmew
+    mewmew pop
     palash
     hello";
     let mut source_input = a.to_string();
@@ -67,14 +67,13 @@ impl MewlParser {
         let mut curp: usize = 0;
         let mut curtok: String = String::new();
         let mut line_no: usize = 1;
-
         while curp < raw_toks.len() {
             while raw_toks[curp] != ' ' {
                 if raw_toks[curp] == '\n' {
-                line_no += 1;
-                curp += 1;
-                continue;
-            }
+                    line_no += 1;
+                    curp += 1;
+                    continue;
+                }
 
                 curtok.push(raw_toks[curp]);
                 curp += 1;
@@ -83,13 +82,13 @@ impl MewlParser {
             if !curtok.is_empty() {
                 let temp_token = MewToken {
                     lexeme: curtok.clone(),
-                    position: (line_no, curp - curtok.len()),
+                    position: (line_no, (curp - curtok.len(), curp)),
                 };
                 output.push(temp_token);
                 curtok = String::new();
                 //curp+=1;
             }
-            
+
             curp += 1;
         }
 
@@ -101,38 +100,52 @@ impl MewlParser {
         //println!("{:#?}", mytoks);
         //for y in mytoks{
         //println!("{:?}" , y);
-        self.show_nice_error(&mytoks[9]);
+        self.show_nice_error(&mytoks[10], "This wasn't supposed to happen!".to_string());
         //}
         Vec::new()
     }
 
-    fn show_nice_error(&self, tok: &MewToken) {
-        //println!("{}" , self.source);
+    fn show_nice_error(&self, tok: &MewToken, err_msg: String) {
         let mut xx = self.source.clone();
+        let newline_next = xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()
+            [tok.position.1 .1 - 1]
+            == "\n";
+        xx.insert_str(
+            if newline_next {
+                tok.position.1 .1 - 1
+            } else {
+                tok.position.1 .1
+            },
+            " <-\x1b[0m",
+        );
+        xx.insert_str(tok.position.1 .0 - 1, " \x1b[96;1m-> ");
 
-        xx.insert_str(tok.position.1 + if tok.lexeme.len() > 1 {tok.lexeme.len()-1}else{tok.lexeme.len()}, "<-\x1b[0m");
-        xx.insert_str(if tok.lexeme.len() > 1 { tok.position.1-1} else {tok.position.1}, " \x1b[93m->");
+        let o: Vec<String> = xx
+            .split_terminator('\n')
+            .into_iter()
+            .map(|i| i.trim().to_string().replace('\n', ""))
+            .collect();
 
-        let o: Vec<String> = xx.split_terminator('\n').into_iter().map(|i| i.to_string()).collect();
-
-        let line_index = tok.position.0;
-        println!("{}-{}->{:?}" , line_index , o.len() , o);
-        if line_index > 1 {
-            println!("|{}| {}", line_index - 1, o[line_index - 2]);
+        let mut line_index = 0;
+        if newline_next {
+            line_index = tok.position.0 - 2
+        } else {
+            line_index = tok.position.0 - 1
         }
 
-        println!(
-            "{}",
-            format!("|{}|", tok.position.0) + &o[tok.position.0 - 1]
-        );
-        
-        /*
-        if line_index < o.len() && line_index != o.len() {
-            println!("|{}| {}", line_index + 1, o[line_index + 1]);
-        }*/
-        
-        
-        //println!("{:?}" , tok)
+        if !err_msg.is_empty() {
+            eprintln!("\x1b[95m[Eh!] : {} \x1b[0m\n", err_msg);
+        }
+
+        if line_index != 0 && o.len() > line_index {
+            println!("|{}| {}", line_index, o[line_index - 1])
+        }
+
+        println!("|{}| {}", line_index + 1, o[line_index]);
+
+        if line_index < o.len() {
+            println!("|{}| {}", line_index + 2, o[line_index + 1])
+        }
     }
 
     fn evaluate(&mut self, sym_table: &mut HashMap<String, f64>) -> Atom {
