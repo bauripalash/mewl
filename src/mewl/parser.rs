@@ -1,5 +1,5 @@
-use std::process::exit;
 use std::collections::HashMap;
+use std::process::exit;
 
 use crate::mewl::types::*;
 
@@ -17,7 +17,6 @@ impl MewlParser {
         //let source_code = source.clone();
         source.push('\n');
         source.push(' '); // without these last statements are not being parser; TODO: Fix this, if possible
-
 
         Self {
             source: source.replace('[', " [ ").replace(']', " ] "), // adding space between parens to make parsing easier
