@@ -1,0 +1,16 @@
+[:: [+ [mew mewmew mewmew mewmewmew]]]
+
+
+[:: 
+mew 
+    [mewmew] 
+        [[mewmewmew]] 
+            [[[mewmewmewmew]]] 
+                [[[[mewmewmewmewmew]]]] 
+                    [[[[[mewmewmewmewmewmew]]]]] 
+                        [[[[[[mewmewmewmewmewmewmew]]]]]] 
+                            [[[[[[[mewmewmewmewmewmewmewmew]]]]]]]
+                                [[[[[[[[mewmewmewmewmewmewmewmewmew]]]]]]]]
+                                    [[[[[[[[[ - mew mew]]]]]]]]]
+
+]

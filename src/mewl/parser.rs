@@ -3,7 +3,7 @@ use std::process::exit;
 
 use crate::mewl::types::*;
 
-const OPERATORS: [&str; 5] = ["+", "-", "*", "/", "::"];
+const OPERATORS: [&str; 6] = ["+", "-", "*", "/", "::", ":::"];
 
 #[allow(dead_code)]
 pub struct MewlParser {
@@ -84,24 +84,28 @@ impl MewlParser {
             token_list.push(Expr::List(self.parse_raw_tokens(&mut mytoks)));
         }
         let _ = self.evaluate(&mut Expr::List(token_list), &mut HashMap::new());
-        //println!("{:?}" , ev);
+        //println!("{:?}" , a);
         //println!("{:#?}" , token_list);
         //token_list
     }
 
-    fn evaluate(&mut self, exp: &mut Expr, symbol_table: &mut HashMap<String, f64>) -> Atom {
+    fn evaluate(
+        &mut self,
+        exp: &mut Expr,
+        symbol_table: &mut HashMap<String, f64>,
+    ) -> (Option<Atom>, Option<Vec<Atom>>) {
         match exp {
             Expr::Atom(atom) => match atom {
-                Atom::Number(_) => atom.to_owned(),
+                Atom::Number(_) => (Some(atom.to_owned()), None),
                 Atom::Sym(atom_symbol) => {
                     if OPERATORS.contains(&atom_symbol.lexeme.as_str()) {
-                        return atom.to_owned();
+                        return (Some(atom.to_owned()), None);
                     }
 
                     let variable_value = symbol_table.get(&atom_symbol.lexeme);
 
                     if let Some(..) = variable_value {
-                        Atom::Number(*variable_value.unwrap())
+                        (Some(Atom::Number(*variable_value.unwrap())), None)
                     } else {
                         self.show_nice_error(
                             atom_symbol,
@@ -116,24 +120,33 @@ impl MewlParser {
                 let mut atom_list: Vec<Atom> = vec![];
 
                 for item in expr_list.iter_mut() {
-                    atom_list.push(self.evaluate(item, symbol_table))
-                }
+                    let evaluted_res: (Option<Atom>, Option<Vec<Atom>>) =
+                        self.evaluate(item, symbol_table);
 
+                    if evaluted_res.0.is_some() && evaluted_res.1.is_none() {
+                        atom_list.push(evaluted_res.0.unwrap());
+                    } else if evaluted_res.1.is_some() && evaluted_res.0.is_none() {
+                        atom_list.append(&mut evaluted_res.1.unwrap());
+                    }
+                }
+                let clone_of_atom_list = atom_list.clone();
                 let current_operator: Vec<Atom> = atom_list.drain(..1).collect();
 
                 match &current_operator[0] {
                     Atom::Number(_) => {
-                        return current_operator[0].clone();
+                        return (None, Some(clone_of_atom_list));
                     }
                     Atom::Sym(symbol) => {
                         if OPERATORS.contains(&symbol.lexeme.as_str()) {
-                            return self.do_binary_operation(symbol.lexeme.as_str(), atom_list);
+                            return (
+                                Some(self.do_binary_operation(symbol.lexeme.as_str(), atom_list)),
+                                None,
+                            );
                         } else {
                             self.show_nice_error(
                                 symbol,
                                 "Unexpected Atom; I don't know, what to do with this!".to_string(),
                             );
-                            //exit(1);
                         }
                     }
                 }
@@ -148,10 +161,10 @@ impl MewlParser {
             Atom::Number(atm) => Some(*atm),
             _ => None,
         }
-        //Some(0.0)
     }
 
     fn do_binary_operation(&self, op: &str, exp_args: Vec<Atom>) -> Atom {
+        //println!("{:?}" , exp_args);
         let extracted_atom_list: Vec<Option<f64>> = exp_args
             .into_iter()
             .map(|a| self.extract_atom(&a))
@@ -167,13 +180,6 @@ impl MewlParser {
             }
 
             "-" => {
-                /*
-                res = converted
-                    .into_iter()
-                    .flatten()
-                    .into_iter()
-                    .fold(0.0, |a, b| a-b);
-                println!("{}" , res);*/
                 result = extracted_atom_list
                     .into_iter()
                     .flatten()
@@ -228,8 +234,53 @@ impl MewlParser {
         Atom::Number(result)
     }
 
+    fn is_mewnum(&self, token: &MewToken) -> bool {
+        let mut token_lexeme = token.lexeme.chars();
+        //let mut result = false;
+
+        while !token_lexeme.as_str().is_empty() {
+            if token_lexeme.next() != Some('m') {
+                return false;
+            }
+            if token_lexeme.next() != Some('e') {
+                return false;
+            }
+
+            if token_lexeme.next() != Some('w') {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    #[allow(dead_code)]
+    fn is_identifier(&self, token: &MewToken) -> bool {
+        let mut token_lexeme = token.lexeme.chars();
+        //let mut result = false;
+        if token_lexeme.next() != Some('~') {
+            return false;
+        }
+
+        while !token_lexeme.as_str().is_empty() {
+            if token_lexeme.next() != Some('m') {
+                return false;
+            }
+            if token_lexeme.next() != Some('e') {
+                return false;
+            }
+
+            if token_lexeme.next() != Some('w') {
+                return false;
+            }
+        }
+
+        true
+    }
+
     fn parse_raw_atom(&self, token: &MewToken) -> Atom {
-        if token.lexeme.starts_with("mew") {
+        //println!("<<<<<<<|{}|=>>>>>>{:?}" , token.lexeme , self.is_mewnum(token));
+        if self.is_mewnum(token) {
             //TODO: Fix
             return Atom::Number(token.lexeme.len() as f64 / 3.0);
         }
