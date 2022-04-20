@@ -6,7 +6,7 @@
 
 ## 🤔 What,Why?
 
-Well, 2 years ago in 2020, I created a esoteric programming language called [Mewmew](https://github.com/bauripalash/mewmew). It was just a fun and experimental language I made a while tinkering with ANTLR, cause I was (am still) fascinated about programming languages, interpreter/compilers; how they work; how they basically become the medium of interaction between humans and computers and machines. But with ANTLR, how didn't actually learn much about compiler/interpreter construction. It just worked! No fun!
+Well, 2 years ago in 2020, I created a esoteric programming language called [Mewmew](https://github.com/bauripalash/mewmew). It was just a fun and experimental language I made while tinkering with ANTLR, cause I was (am still) fascinated about programming languages, interpreter/compilers; how they work; how they basically become the medium of interaction between humans and computers and/or machines. But with ANTLR, I didn't actually learn much about compiler/interpreter construction. It just worked! No fun!
 
 So, In the October of 2021, I started re-writing the whole thing from scratch with Rust. I was able to build a lexer; a basic parser; But then I realized, syntax of 'mewmew' is ugly. I hurts my eyes to look at a 'mewmew' source code.
 
