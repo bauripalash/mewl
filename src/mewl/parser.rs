@@ -51,6 +51,18 @@ impl MewlParser {
                     continue;
                 }
 
+                // if we find `//` anywhere, all the tokens are skipped unless we find a newline
+                if raw_toks[curp] == '/' && raw_toks[curp + 1] == '/' {
+                    line_no += 1; //increment the line index;
+                    curp += 2; //skip the comment chars
+                    while raw_toks[curp] != '\n' {
+                        //skip everything until we find a newline
+                        curp += 1;
+                    }
+                    curp += 1; //skip the newline;
+                    continue;
+                }
+
                 curtok.push(raw_toks[curp]); //if the current char is not; the char is pushed to `curtok`
                 curp += 1;
             }
@@ -81,9 +93,11 @@ impl MewlParser {
         let mut mytoks = self.get_tokens();
         let mut token_list: Vec<Expr> = vec![];
         while !mytoks.is_empty() {
-            token_list.push(Expr::List(self.parse_raw_tokens(&mut mytoks)));
+            token_list.push(self.parse_raw_tokens(&mut mytoks));
         }
-        let _ = self.evaluate(&mut Expr::List(token_list), &mut HashMap::new());
+        let mut st: HashMap<String, f64> = HashMap::new();
+        st.insert("~mew".to_string(), 3.0);
+        let _ = self.evaluate(&mut Expr::List(token_list), &mut st);
         //println!("{:?}" , a);
         //println!("{:#?}" , token_list);
         //token_list
@@ -94,22 +108,34 @@ impl MewlParser {
         exp: &mut Expr,
         symbol_table: &mut HashMap<String, f64>,
     ) -> (Option<Atom>, Option<Vec<Atom>>) {
+        //let p = exp.clone();
         match exp {
             Expr::Atom(atom) => match atom {
                 Atom::Number(_) => (Some(atom.to_owned()), None),
                 Atom::Sym(atom_symbol) => {
                     if OPERATORS.contains(&atom_symbol.lexeme.as_str()) {
-                        return (Some(atom.to_owned()), None);
-                    }
+                        (Some(atom.to_owned()), None)
+                    } else if self.is_identifier(atom_symbol) {
+                        //[^ref-1] //see below
+                        //check if the symbol is identifer; basically if mew number starts with a `~` char
 
-                    let variable_value = symbol_table.get(&atom_symbol.lexeme);
+                        let var_value = symbol_table.get(&atom_symbol.lexeme); //get value from symbol table
 
-                    if let Some(..) = variable_value {
-                        (Some(Atom::Number(*variable_value.unwrap())), None)
+                        if let Some(..) = var_value {
+                            (Some(Atom::Number(*var_value.unwrap())), None)
+                        //if the id has value assigned to it; create a new Atom with the value
+                        } else {
+                            self.show_nice_error(atom_symbol, "Undefined variable!".to_string()); //variable has no value; show error
+                            exit(1);
+                        }
+                    } else if self.is_assignment(atom_symbol) {
+                        //check if the symbol is assignment; if mew number starts with `=`
+
+                        (Some(atom.to_owned()), None) // return as is; so we can use it later for assignment
                     } else {
                         self.show_nice_error(
                             atom_symbol,
-                            "Sorry! I dont know the value of this variable".to_string(),
+                            "Sorry! I dont know what to do with this symbol!".to_string(),
                         );
                         exit(1);
                     }
@@ -142,6 +168,22 @@ impl MewlParser {
                                 Some(self.do_binary_operation(symbol.lexeme.as_str(), atom_list)),
                                 None,
                             );
+                        //we only need to check if it is a assignment expression or not;
+                        //because the value has already been extracted above [^ref-1]
+                        //or an error has been thrown
+                        } else if self.is_assignment(symbol) {
+                            //check if assignment; mew number with `=`
+                            if !atom_list.is_empty() {
+                                self.do_assignment(&symbol.lexeme, &atom_list, symbol_table);
+                                return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
+                            } else {
+                                self.show_nice_error(
+                                    symbol,
+                                    "No expression provided after identifier to assign to it."
+                                        .to_string(),
+                                );
+                                exit(1);
+                            }
                         } else {
                             self.show_nice_error(
                                 symbol,
@@ -156,10 +198,70 @@ impl MewlParser {
         }
     }
 
+    fn do_assignment(
+        &self,
+        identifer: &str,
+        atom: &[Atom],
+        symbol_table: &mut HashMap<String, f64>,
+    ) {
+        // the argument we got will be something like `=mewmew` so, what we have to is convert it
+        // to something like `~mewmew` , so it can be found on the symbol table later;
+        let mut p_id: Vec<String> = identifer.chars().map(|c| c.to_string()).collect();
+        p_id[0] = "~".to_string();
+        let id = p_id.join("");
+
+        let mut value: f64 = 0.0;
+        if atom.len() > 1 {
+            // What is happening here is =>
+            // [=mew [mew mew mewmew]]
+            // we have to assign `[mew mew mew]` to `~mew`
+            // but the expression list has no function/operator
+            // so first, we convert the expression to something like this `[1 2 3]`
+            // then convert it to a string "123" then parse it as float;
+            // finally assign it to `~mew`
+
+            //let extracted_atom_list: Vec<Option<f64>> =
+            //    atom.into_iter().map(|a| self.extract_atom(a)).collect();
+
+            let x = atom.iter().map(|a| self.extract_atom(a))
+                .into_iter()
+                .flatten()
+                .map(|a| a.to_string())
+                .collect::<Vec<String>>();
+            let temp_value = x.join("").parse::<f64>();
+
+            match temp_value {
+                Ok(v) => value = v,
+                Err(_) => {
+                    eprintln!(
+                        "Failed to join expression list and create a single value for assignment"
+                    );
+                    exit(1);
+                }
+            }
+        } else if let Atom::Number(n) = atom[0].to_owned(){
+                value = n;
+            
+        }
+
+        symbol_table.insert(id, value);
+    }
+
     fn extract_atom(&self, atom: &Atom) -> Option<f64> {
         match atom {
             Atom::Number(atm) => Some(*atm),
-            _ => None,
+            Atom::Sym(atm) => {
+                if self.is_identifier(atm) {
+                    self.show_nice_error(atm, "Undefined variable!".to_string());
+                    exit(1);
+                } else if self.is_assignment(atm) {
+                    self.show_nice_error(atm, "Unexpected assignment!".to_string());
+                    exit(1);
+                } else {
+                    self.show_nice_error(atm, "Unexpected symbol!".to_string());
+                    exit(1);
+                }
+            }
         }
     }
 
@@ -205,6 +307,7 @@ impl MewlParser {
             }
 
             "::" => {
+                //println!("{:?}" , extracted_atom_list);
                 println!(
                     "{}",
                     extracted_atom_list
@@ -278,6 +381,30 @@ impl MewlParser {
         true
     }
 
+    #[allow(dead_code)]
+    fn is_assignment(&self, token: &MewToken) -> bool {
+        let mut token_lexeme = token.lexeme.chars();
+        //let mut result = false;
+        if token_lexeme.next() != Some('=') {
+            return false;
+        }
+
+        while !token_lexeme.as_str().is_empty() {
+            if token_lexeme.next() != Some('m') {
+                return false;
+            }
+            if token_lexeme.next() != Some('e') {
+                return false;
+            }
+
+            if token_lexeme.next() != Some('w') {
+                return false;
+            }
+        }
+
+        true
+    }
+
     fn parse_raw_atom(&self, token: &MewToken) -> Atom {
         //println!("<<<<<<<|{}|=>>>>>>{:?}" , token.lexeme , self.is_mewnum(token));
         if self.is_mewnum(token) {
@@ -288,20 +415,44 @@ impl MewlParser {
         Atom::Sym(token.to_owned())
     }
 
-    fn parse_raw_tokens(&mut self, raw_tokens: &mut Vec<MewToken>) -> Vec<Expr> {
+    fn parse_raw_tokens(&mut self, raw_tokens: &mut Vec<MewToken>) -> Expr {
+        //println!("{:?}" , raw_tokens);
+        let current_token = self.poktoken(raw_tokens);
         if raw_tokens.is_empty() {
             eprintln!("No expression to parse");
         }
 
-        let current_token = self.poktoken(raw_tokens);
         match current_token.lexeme.as_str() {
             "[" => {
+                //`println!("{:?}" , raw_tokens);
                 let mut output_tokens: Vec<Expr> = vec![];
                 while raw_tokens[0].lexeme != *"]" {
-                    output_tokens.append(&mut self.parse_raw_tokens(raw_tokens));
+                    //                    if raw_tokens.first().unwrap().lexeme != *"]"{
+
+                    output_tokens.push(self.parse_raw_tokens(raw_tokens));
+                    /*                    }
+                    else if current_token.lexeme == *"]" {
+                        self.show_nice_error(&current_token, "[ found".to_string());
+                        exit(1);
+                    }
+
+                    //self.poktoken(raw_tokens);
+                    */
+                    if raw_tokens.is_empty() {
+                        // if tokens are empty; that might suggest that some brackets are still open; so error!
+                        self.show_nice_error(
+                            &current_token,
+                            "Cannot find closing bracket for this opening bracket".to_string(),
+                        );
+                        exit(1);
+                    }
                 }
-                self.poktoken(raw_tokens);
-                let output: Vec<Expr> = vec![Expr::List(output_tokens)];
+
+                //println!("{:?}" , raw_tokens);
+                if !raw_tokens.is_empty() {
+                    self.poktoken(raw_tokens);
+                }
+                let output: Expr = Expr::List(output_tokens);
                 output
             }
             "]" => {
@@ -309,7 +460,7 @@ impl MewlParser {
                 exit(1);
             }
             _ => {
-                let out: Vec<Expr> = vec![Expr::Atom(self.parse_raw_atom(&current_token))];
+                let out: Expr = Expr::Atom(self.parse_raw_atom(&current_token));
                 out
             }
         }
