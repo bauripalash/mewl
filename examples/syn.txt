@@ -1,0 +1,5 @@
+[=mewmew [ [* mewmew mewmewmew] [+ mewmewmew mewmew ] ]]
+// hello world
+[::: ~mewmew]
+//[:::  ~mewmew [+ ~mewmew mew] [+ ~mewmew mewmew] [- [* ~mewmew mewmew] [ * mewmewmew mewmewmew ] ] ]
+[:: mew]
