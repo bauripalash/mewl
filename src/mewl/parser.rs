@@ -3,7 +3,9 @@ use std::process::exit;
 
 use crate::mewl::types::*;
 
-const OPERATORS: [&str; 6] = ["+", "-", "*", "/", "::", ":::"];
+const OPERATORS: [&str; 13] = [
+    "+", "-", "*", "/", "::", ":::", ">", "<", "==", "!=", "<=", ">=", "@",
+];
 
 #[allow(dead_code)]
 pub struct MewlParser {
@@ -143,57 +145,124 @@ impl MewlParser {
             },
 
             Expr::List(expr_list) => {
-                let mut atom_list: Vec<Atom> = vec![];
-
-                for item in expr_list.iter_mut() {
-                    let evaluted_res: (Option<Atom>, Option<Vec<Atom>>) =
-                        self.evaluate(item, symbol_table);
-
-                    if evaluted_res.0.is_some() && evaluted_res.1.is_none() {
-                        atom_list.push(evaluted_res.0.unwrap());
-                    } else if evaluted_res.1.is_some() && evaluted_res.0.is_none() {
-                        atom_list.append(&mut evaluted_res.1.unwrap());
-                    }
-                }
-                let clone_of_atom_list = atom_list.clone();
-                let current_operator: Vec<Atom> = atom_list.drain(..1).collect();
-
-                match &current_operator[0] {
-                    Atom::Number(_) => {
-                        return (None, Some(clone_of_atom_list));
-                    }
-                    Atom::Sym(symbol) => {
-                        if OPERATORS.contains(&symbol.lexeme.as_str()) {
-                            return (
-                                Some(self.do_binary_operation(symbol.lexeme.as_str(), atom_list)),
-                                None,
-                            );
-                        //we only need to check if it is a assignment expression or not;
-                        //because the value has already been extracted above [^ref-1]
-                        //or an error has been thrown
-                        } else if self.is_assignment(symbol) {
-                            //check if assignment; mew number with `=`
-                            if !atom_list.is_empty() {
-                                self.do_assignment(&symbol.lexeme, &atom_list, symbol_table);
-                                return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
-                            } else {
+                if !expr_list.is_empty() {
+                    let mut atom_list: Vec<Atom> = vec![];
+                    if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
+                        if s.lexeme == *"@" {
+                            if expr_list.len() < 3 {
                                 self.show_nice_error(
-                                    symbol,
-                                    "No expression provided after identifier to assign to it."
+                                    s,
+                                    "Cannot find correct number of arguments for this if statement"
                                         .to_string(),
                                 );
                                 exit(1);
                             }
-                        } else {
-                            self.show_nice_error(
-                                symbol,
-                                "Unexpected Atom; I don't know, what to do with this!".to_string(),
-                            );
+                            let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
+                            let condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+                            let condition: f64 = if condition_temp.is_some() {
+                                match condition_temp.unwrap() {
+                                    Atom::Number(n) => n,
+                                    _ => 0.0,
+                                }
+                            } else {
+                                0.0
+                            };
+
+                            let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                            
+                            let mut index : f64 = 0.0;
+                            //println!("{}" , condition);
+                            while index != condition{
+                                self.evaluate(&mut body[0], symbol_table);
+                                index += 1.0;
+                            }
+
+                            /*if condition {
+                                return self.evaluate(&mut body[0], symbol_table);
+                            } else {
+                                if !expr_list.is_empty() {
+                                    let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                                    return self.evaluate(&mut else_body[0], symbol_table);
+                                }
+                                return (None, None);
+                            }
+                            */
                         }
                     }
-                }
+                    for item in expr_list.iter_mut() {
+                        let evaluted_res: (Option<Atom>, Option<Vec<Atom>>) =
+                            self.evaluate(item, symbol_table);
 
-                self.evaluate(&mut expr_list[0], symbol_table)
+                        if evaluted_res.0.is_some() && evaluted_res.1.is_none() {
+                            atom_list.push(evaluted_res.0.unwrap());
+                        } else if evaluted_res.1.is_some() && evaluted_res.0.is_none() {
+                            atom_list.append(&mut evaluted_res.1.unwrap());
+                        }
+                    }
+
+                    if !atom_list.is_empty() {
+                        let clone_of_atom_list = atom_list.clone();
+                        let current_operator: Vec<Atom> = atom_list.drain(..1).collect();
+
+                        match &current_operator[0] {
+                            Atom::Number(_) => {
+                                return (None, Some(clone_of_atom_list));
+                            }
+                            Atom::Sym(symbol) => {
+                                if symbol.lexeme == *"?" {
+
+                                    /*
+                                    if z.0.is_some(){
+                                        match z.0.unwrap(){
+                                            Atom::Number(n) => { if n >= 1.0 {self.evaluate(&mut expr_list[2], symbol_table);}}
+                                            _=>{}
+                                        }
+                                    }*/
+                                } else if OPERATORS.contains(&symbol.lexeme.as_str()) {
+                                    return (
+                                        Some(self.do_binary_operation(
+                                            symbol.lexeme.as_str(),
+                                            atom_list,
+                                        )),
+                                        None,
+                                    );
+                                //we only need to check if it is a assignment expression or not;
+                                //because the value has already been extracted above [^ref-1]
+                                //or an error has been thrown
+                                } else if self.is_assignment(symbol) {
+                                    //check if assignment; mew number with `=`
+                                    if !atom_list.is_empty() {
+                                        self.do_assignment(
+                                            &symbol.lexeme,
+                                            &atom_list,
+                                            symbol_table,
+                                        );
+                                        return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
+                                    } else {
+                                        self.show_nice_error(
+                                    symbol,
+                                    "No expression provided after identifier to assign to it."
+                                        .to_string(),
+                                );
+                                        exit(1);
+                                    }
+                                } else {
+                                    self.show_nice_error(
+                                        symbol,
+                                        "Unexpected Atom; I don't know, what to do with this!"
+                                            .to_string(),
+                                    );
+                                }
+                            }
+                        }
+
+                        self.evaluate(&mut expr_list[0], symbol_table)
+                    } else {
+                        (None, None)
+                    }
+                } else {
+                    (None, None)
+                }
             }
         }
     }
@@ -223,7 +292,9 @@ impl MewlParser {
             //let extracted_atom_list: Vec<Option<f64>> =
             //    atom.into_iter().map(|a| self.extract_atom(a)).collect();
 
-            let x = atom.iter().map(|a| self.extract_atom(a))
+            let x = atom
+                .iter()
+                .map(|a| self.extract_atom(a))
                 .into_iter()
                 .flatten()
                 .map(|a| a.to_string())
@@ -239,9 +310,8 @@ impl MewlParser {
                     exit(1);
                 }
             }
-        } else if let Atom::Number(n) = atom[0].to_owned(){
-                value = n;
-            
+        } else if let Atom::Number(n) = atom[0].to_owned() {
+            value = n;
         }
 
         symbol_table.insert(id, value);
@@ -262,6 +332,54 @@ impl MewlParser {
                     exit(1);
                 }
             }
+        }
+    }
+
+    fn do_comparison(&self, op: &str, exp_args: Vec<f64>) -> f64 {
+        let mut temp_res: Option<&f64> = None;
+        match op {
+            "==" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] == a[1])
+                    .then(|| &exp_args[0])
+            }
+            "!=" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] != a[1])
+                    .then(|| &exp_args[0])
+            }
+            "<" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] < a[1])
+                    .then(|| &exp_args[0])
+            }
+            ">" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] > a[1])
+                    .then(|| &exp_args[0])
+            }
+            ">=" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] >= a[1])
+                    .then(|| &exp_args[0])
+            }
+            "<=" => {
+                temp_res = exp_args
+                    .windows(2)
+                    .all(|a| a[0] <= a[1])
+                    .then(|| &exp_args[0])
+            }
+            _ => temp_res = None,
+        };
+        if temp_res.is_some() {
+            1.0
+        } else {
+            0.0
         }
     }
 
@@ -306,6 +424,15 @@ impl MewlParser {
                     .unwrap();
             }
 
+            ">" | "<" | "==" | "!=" | "<=" | ">=" => {
+                let flat_list: Vec<f64> = extracted_atom_list.into_iter().flatten().collect();
+
+                result = match flat_list.is_empty() {
+                    true => 0.0,
+                    false => self.do_comparison(op, flat_list),
+                };
+            }
+
             "::" => {
                 //println!("{:?}" , extracted_atom_list);
                 println!(
@@ -338,8 +465,12 @@ impl MewlParser {
     }
 
     fn is_mewnum(&self, token: &MewToken) -> bool {
+        //println!("IS_MEWNUM=> {:?}" , token);
         let mut token_lexeme = token.lexeme.chars();
         //let mut result = false;
+        if token_lexeme.as_str().len() < 3 {
+            return false;
+        }
 
         while !token_lexeme.as_str().is_empty() {
             if token_lexeme.next() != Some('m') {
@@ -359,8 +490,12 @@ impl MewlParser {
 
     #[allow(dead_code)]
     fn is_identifier(&self, token: &MewToken) -> bool {
+        //println!("IS_ID=> {:?}" , token);
         let mut token_lexeme = token.lexeme.chars();
         //let mut result = false;
+        if token_lexeme.as_str().len() < 4 {
+            return false;
+        }
         if token_lexeme.next() != Some('~') {
             return false;
         }
@@ -383,8 +518,13 @@ impl MewlParser {
 
     #[allow(dead_code)]
     fn is_assignment(&self, token: &MewToken) -> bool {
+        //println!("ID_ASSIGN=> {:?}" , token);
         let mut token_lexeme = token.lexeme.chars();
         //let mut result = false;
+        if token_lexeme.as_str().len() < 4 {
+            return false;
+        }
+
         if token_lexeme.next() != Some('=') {
             return false;
         }
@@ -401,6 +541,7 @@ impl MewlParser {
                 return false;
             }
         }
+        //println!("YES_ASSIGN");
 
         true
     }
