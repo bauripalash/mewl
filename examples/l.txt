@@ -1,3 +1,6 @@
-
-[=mew [@ mewmew [:: mewmew ] [mew] ] ]
-[:: ~mew]
+[=mewmew mew]
+[=mewmewmew [@ [!= ~mewmew [* mewmewmew mewmewmew] ] 
+	[ [:: ~mewmew]  [=mewmew [+ ~mewmew mew]]]
+	[+ ~mewmew mew]
+]]
+[:: ~mewmewmew]

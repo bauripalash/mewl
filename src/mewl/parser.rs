@@ -158,8 +158,9 @@ impl MewlParser {
                                 exit(1);
                             }
                             let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
-                            let condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
-                            let condition: f64 = if condition_temp.is_some() {
+                            let mut condition_temp =
+                                self.evaluate(&mut con_expr[1], symbol_table).0;
+                            let mut condition: f64 = if condition_temp.is_some() {
                                 match condition_temp.unwrap() {
                                     Atom::Number(n) => n,
                                     _ => 0.0,
@@ -169,13 +170,40 @@ impl MewlParser {
                             };
 
                             let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
-                            
-                            let mut index : f64 = 0.0;
+
+                            //let mut index : f64 = 0.0;
                             //println!("{}" , condition);
+                            loop {
+                                self.evaluate(&mut body[0], symbol_table);
+
+                                condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+                                condition = if condition_temp.is_some() {
+                                    match condition_temp.unwrap() {
+                                        Atom::Number(n) => n,
+                                        _ => 0.0,
+                                    }
+                                } else {
+                                    0.0
+                                };
+
+                                if condition == 0.0 {
+                                    if !expr_list.is_empty() {
+                                        let mut else_body =
+                                            expr_list.drain(..1).collect::<Vec<Expr>>();
+                                        return self.evaluate(&mut else_body[0], symbol_table);
+                                    } else {
+                                        return (None, None);
+                                    }
+
+                                    //break;
+                                }
+                            }
+
+                            /*
                             while index != condition{
                                 self.evaluate(&mut body[0], symbol_table);
                                 index += 1.0;
-                            }
+                            }*/
 
                             /*if condition {
                                 return self.evaluate(&mut body[0], symbol_table);
