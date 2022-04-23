@@ -3,8 +3,8 @@ use std::process::exit;
 
 use crate::mewl::types::*;
 
-const OPERATORS: [&str; 13] = [
-    "+", "-", "*", "/", "::", ":::", ">", "<", "==", "!=", "<=", ">=", "@",
+const OPERATORS: [&str; 14] = [
+    "+", "-", "*", "/", "::", ":::", ">", "<", "==", "!=", "<=", ">=", "@", "?",
 ];
 
 #[allow(dead_code)]
@@ -152,7 +152,7 @@ impl MewlParser {
                             if expr_list.len() < 3 {
                                 self.show_nice_error(
                                     s,
-                                    "Cannot find correct number of arguments for this if statement"
+                                    "Cannot find correct number of arguments for this loop statement"
                                         .to_string(),
                                 );
                                 exit(1);
@@ -171,31 +171,32 @@ impl MewlParser {
 
                             let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
 
-                            //let mut index : f64 = 0.0;
-                            //println!("{}" , condition);
-                            loop {
-                                self.evaluate(&mut body[0], symbol_table);
+                            if condition >= 1.0 {
+                                loop {
+                                    self.evaluate(&mut body[0], symbol_table);
 
-                                condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
-                                condition = if condition_temp.is_some() {
-                                    match condition_temp.unwrap() {
-                                        Atom::Number(n) => n,
-                                        _ => 0.0,
-                                    }
-                                } else {
-                                    0.0
-                                };
-
-                                if condition == 0.0 {
-                                    if !expr_list.is_empty() {
-                                        let mut else_body =
-                                            expr_list.drain(..1).collect::<Vec<Expr>>();
-                                        return self.evaluate(&mut else_body[0], symbol_table);
+                                    condition_temp =
+                                        self.evaluate(&mut con_expr[1], symbol_table).0;
+                                    condition = if condition_temp.is_some() {
+                                        match condition_temp.unwrap() {
+                                            Atom::Number(n) => n,
+                                            _ => 0.0,
+                                        }
                                     } else {
-                                        return (None, None);
-                                    }
+                                        0.0
+                                    };
 
-                                    //break;
+                                    if condition == 0.0 {
+                                        if !expr_list.is_empty() {
+                                            let mut else_body =
+                                                expr_list.drain(..1).collect::<Vec<Expr>>();
+                                            return self.evaluate(&mut else_body[0], symbol_table);
+                                        } else {
+                                            return (None, None);
+                                        }
+
+                                        //break;
+                                    }
                                 }
                             }
 
@@ -215,6 +216,38 @@ impl MewlParser {
                                 return (None, None);
                             }
                             */
+                        }else if s.lexeme == *"?"{
+                             if expr_list.len() < 3 {
+                                self.show_nice_error(
+                                    s,
+                                    "Cannot find correct number of arguments for this if statement"
+                                        .to_string(),
+                                );
+                                exit(1);
+                            }
+
+                            let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
+                            let condition_temp =
+                                self.evaluate(&mut con_expr[1], symbol_table).0;
+                            let condition: f64 = if condition_temp.is_some() {
+                                match condition_temp.unwrap() {
+                                    Atom::Number(n) => n,
+                                    _ => 0.0,
+                                }
+                            } else {
+                                0.0
+                            };
+
+                            let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                            if condition >= 1.0 {
+                                    return self.evaluate(&mut body[0], symbol_table);
+
+                                        //break;
+                            }else if !expr_list.is_empty(){
+                                    let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                                    return self.evaluate(&mut else_body[0], symbol_table);
+                                }
+                                //return (None,None)
                         }
                     }
                     for item in expr_list.iter_mut() {
