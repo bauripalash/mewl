@@ -54,7 +54,7 @@ impl MewlEvaluator {
                             undefined_var(atom_symbol, &self.source, true);
                             //self.show_nice_error(atom_symbol, "Undefined variable!".to_string()); //variable has no value; show error
                             //exit(1);
-                            (None,None)
+                            (None, None)
                         }
                     } else if is_this_assignment(atom_symbol) {
                         //check if the symbol is assignment; if mew number starts with `=`
@@ -67,7 +67,7 @@ impl MewlEvaluator {
                         //    "Sorry! I dont know what to do with this symbol!".to_string(),
                         //);
                         //exit(1);
-                        (None,None)
+                        (None, None)
                     }
                 }
             },
@@ -79,7 +79,7 @@ impl MewlEvaluator {
                         if s.lexeme == *"@" {
                             if expr_list.len() < 3 {
                                 loop_arg_wrong(s, &self.source, true);
-                                
+
                                 //exit(1);
                             }
                             let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
