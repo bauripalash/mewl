@@ -1,4 +1,6 @@
 use crate::mewl::types::*;
+use crate::mewl::errors::*;
+use crate::mewl::eval_helpers::mewcheck::*;
 use std::collections::HashMap;
 use std::process::exit;
 
@@ -21,59 +23,7 @@ impl MewlEvaluator {
         }
     }
 
-    fn show_nice_error(&self, tok: &MewToken, err_msg: String) {
-        let mut xx = self.source.clone(); //cloning the source cause I don't want to mess up the origin source;
-                                          // the parser maybe able to catch other error; so source should not be mutated; I guess;
-
-        //checks if the next char a linefeed char `\n` for below bug
-        //BUG: If there is a linefeed char after the error token -
-        //the token highlight is also including the `\n`
-        let newline_next = xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()
-            [tok.position.1 .1 - 1]
-            == "\n";
-
-        xx.insert_str(
-            if newline_next {
-                tok.position.1 .1 - 1
-            } else {
-                tok.position.1 .1
-            },
-            " <-\x1b[0m",
-        );
-
-        xx.insert_str(tok.position.1 .0 - 1, " \x1b[96;1m-> ");
-
-        let o: Vec<String> = xx
-            .split_terminator('\n')
-            .into_iter()
-            .map(|i| i.trim().to_string().replace('\n', ""))
-            .collect();
-
-        let mut line_index = tok.position.0;
-        if newline_next {
-            line_index -= 2
-        } else {
-            line_index -= 1
-        }
-
-        if !err_msg.is_empty() {
-            eprintln!("\x1b[95m[Eh!] : {} \x1b[0m\n", err_msg);
-        }
-
-        //line before the error line
-        if line_index != 0 && o.len() > line_index {
-            println!("|{}| {}", line_index, o[line_index - 1])
-        }
-        //error token's line
-        println!("|{}| {}", line_index + 1, o[line_index]);
-
-        //next line after error
-        if line_index < o.len() {
-            println!("|{}| {}", line_index + 2, o[line_index + 1])
-        }
-
-        //exit(1);
-    }
+   
 
     pub fn do_eval(&mut self) {
         self.evaluate(&mut self.expression.clone(), &mut self.symbol_table.clone());
@@ -91,7 +41,7 @@ impl MewlEvaluator {
                 Atom::Sym(atom_symbol) => {
                     if OPERATORS.contains(&atom_symbol.lexeme.as_str()) {
                         (Some(atom.to_owned()), None)
-                    } else if self.is_identifier(atom_symbol) {
+                    } else if is_this_identifier(atom_symbol) {
                         //[^ref-1] //see below
                         //check if the symbol is identifer; basically if mew number starts with a `~` char
 
@@ -101,18 +51,20 @@ impl MewlEvaluator {
                             (Some(Atom::Number(*var_value.unwrap())), None)
                         //if the id has value assigned to it; create a new Atom with the value
                         } else {
-                            self.show_nice_error(atom_symbol, "Undefined variable!".to_string()); //variable has no value; show error
+                            undefined_var(atom_symbol, &self.source, false);
+                            //self.show_nice_error(atom_symbol, "Undefined variable!".to_string()); //variable has no value; show error
                             exit(1);
                         }
-                    } else if self.is_assignment(atom_symbol) {
+                    } else if is_this_assignment(atom_symbol) {
                         //check if the symbol is assignment; if mew number starts with `=`
 
                         (Some(atom.to_owned()), None) // return as is; so we can use it later for assignment
                     } else {
-                        self.show_nice_error(
-                            atom_symbol,
-                            "Sorry! I dont know what to do with this symbol!".to_string(),
-                        );
+                        unknown_atom(atom_symbol, &self.source, false);
+                        //self.show_nice_error(
+                        //    atom_symbol,
+                        //    "Sorry! I dont know what to do with this symbol!".to_string(),
+                        //);
                         exit(1);
                     }
                 }
@@ -124,11 +76,14 @@ impl MewlEvaluator {
                     if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
                         if s.lexeme == *"@" {
                             if expr_list.len() < 3 {
+                                loop_arg_wrong(s, &self.source, false);
+                                /*
                                 self.show_nice_error(
                                     s,
                                     "Cannot find correct number of arguments for this loop statement"
                                         .to_string(),
                                 );
+                                */
                                 exit(1);
                             }
                             let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
@@ -192,11 +147,14 @@ impl MewlEvaluator {
                             */
                         } else if s.lexeme == *"?" {
                             if expr_list.len() < 3 {
+                                if_arg_wrong(s, &self.source, false);
+                                /*
                                 self.show_nice_error(
                                     s,
                                     "Cannot find correct number of arguments for this if statement"
                                         .to_string(),
                                 );
+                                */
                                 exit(1);
                             }
 
@@ -263,7 +221,7 @@ impl MewlEvaluator {
                                 //we only need to check if it is a assignment expression or not;
                                 //because the value has already been extracted above [^ref-1]
                                 //or an error has been thrown
-                                } else if self.is_assignment(symbol) {
+                                } else if is_this_assignment(symbol) {
                                     //check if assignment; mew number with `=`
                                     if !atom_list.is_empty() {
                                         self.do_assignment(
@@ -273,19 +231,25 @@ impl MewlEvaluator {
                                         );
                                         return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
                                     } else {
+                                        no_expression_after_id(symbol, &self.source, false);
+                                        /*
                                         self.show_nice_error(
                                     symbol,
                                     "No expression provided after identifier to assign to it."
                                         .to_string(),
-                                );
+                                    )
+                                    ;*/
                                         exit(1);
                                     }
                                 } else {
+                                    unknown_atom(symbol, &self.source, false);
+                                    /*
                                     self.show_nice_error(
                                         symbol,
                                         "Unexpected Atom; I don't know, what to do with this!"
                                             .to_string(),
                                     );
+                                    */
                                 }
                             }
                         }
@@ -355,14 +319,17 @@ impl MewlEvaluator {
         match atom {
             Atom::Number(atm) => Some(*atm),
             Atom::Sym(atm) => {
-                if self.is_identifier(atm) {
-                    self.show_nice_error(atm, "Undefined variable!".to_string());
+                if is_this_identifier(atm) {
+                    //self.show_nice_error(atm, "Undefined variable!".to_string());
+                    undefined_var(atm, &self.source, false);
                     exit(1);
-                } else if self.is_assignment(atm) {
-                    self.show_nice_error(atm, "Unexpected assignment!".to_string());
+                } else if is_this_assignment(atm) {
+                    unexpected_assignment(atm, &self.source, false);
+                    //self.show_nice_error(atm, "Unexpected assignment!".to_string());
                     exit(1);
                 } else {
-                    self.show_nice_error(atm, "Unexpected symbol!".to_string());
+                    unknown_atom(atm, &self.source, false);
+                    //self.show_nice_error(atm, "Unexpected symbol!".to_string());
                     exit(1);
                 }
             }
@@ -499,60 +466,7 @@ impl MewlEvaluator {
         Atom::Number(result)
     }
 
-    fn is_identifier(&self, token: &MewToken) -> bool {
-        //println!("IS_ID=> {:?}" , token);
-        let mut token_lexeme = token.lexeme.chars();
-        //let mut result = false;
-        if token_lexeme.as_str().len() < 4 {
-            return false;
-        }
-        if token_lexeme.next() != Some('~') {
-            return false;
-        }
 
-        while !token_lexeme.as_str().is_empty() {
-            if token_lexeme.next() != Some('m') {
-                return false;
-            }
-            if token_lexeme.next() != Some('e') {
-                return false;
-            }
 
-            if token_lexeme.next() != Some('w') {
-                return false;
-            }
-        }
 
-        true
-    }
-
-    #[allow(dead_code)]
-    fn is_assignment(&self, token: &MewToken) -> bool {
-        //println!("ID_ASSIGN=> {:?}" , token);
-        let mut token_lexeme = token.lexeme.chars();
-        //let mut result = false;
-        if token_lexeme.as_str().len() < 4 {
-            return false;
-        }
-
-        if token_lexeme.next() != Some('=') {
-            return false;
-        }
-
-        while !token_lexeme.as_str().is_empty() {
-            if token_lexeme.next() != Some('m') {
-                return false;
-            }
-            if token_lexeme.next() != Some('e') {
-                return false;
-            }
-
-            if token_lexeme.next() != Some('w') {
-                return false;
-            }
-        }
-        //println!("YES_ASSIGN");
-
-        true
-    }
 }
