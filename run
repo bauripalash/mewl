@@ -1,3 +1,6 @@
 #!/bin/sh
 
-cargo run -- examples/a.txt
+for filename in examples/*.txt; do
+    cargo run -- "$filename"
+done;  
+
