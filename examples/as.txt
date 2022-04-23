@@ -1,4 +1,4 @@
-[:: mewmew]
+[:: mewmesw]
 [=mew [+ mew mew] [- mew mew] [+ mew mew ] [+ mew mew]]
 [:: ~mew]
 [:: mewmewmew]

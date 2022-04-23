@@ -1,6 +1,5 @@
 use crate::mewl::types::*;
 
-
 pub fn is_this_mewnum(token: &MewToken) -> bool {
     //println!("IS_MEWNUM=> {:?}" , token);
     let mut token_lexeme = token.lexeme.chars();

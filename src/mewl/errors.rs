@@ -1,89 +1,73 @@
 use crate::mewl::types::*;
 use std::process::exit;
 
-const ERROR_LIST : [&str;6] = [
-
+const ERROR_LIST: [&str; 6] = [
     "Sorry! I don't know the value of this variable!", // [0] //Undefined variable
     "Uh! I can't recognize this symbol! What to do with this?", // [1] //Unexpected symbol/char/atom
     "Please provide correct number of expression for this *loop*", // [2] // loop statement arguments wrong
     "Can not find correct number of arguments for this *if* expression", // [3] // if statement arguments wrong
     "No *expression(s)* provided after this Identifier to assign to it.", // [4] // no expression after identifier
-    "Uh! I was not expecting a assignment here!" //[5] // unexpected assignment statement
-
+    "Uh! I was not expecting a assignment here!", //[5] // unexpected assignment statement
 ];
 
-const LOOP_EXAMPLE : &str = "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
+const LOOP_EXAMPLE: &str =
+    "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
 const IF_EXAMPLE : &str = "Do something like this => \n [ ? [ Condition ] [ Body ] [ False/Else Body ] ]! (False/Else is optional)";
 
-pub fn undefined_var( token : &MewToken , code : &String , do_exit : bool ) {
+pub fn undefined_var(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[0].to_string());
 
-    show_nice_error(token, code , ERROR_LIST[0].to_string());
-
-    if do_exit{
+    if do_exit {
         exit(1);
     }
-
 }
 
-pub fn no_expression_after_id( token : &MewToken , code : &String , do_exit : bool ) {
+pub fn no_expression_after_id(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[4].to_string());
 
-    show_nice_error(token, code , ERROR_LIST[4].to_string());
-
-    if do_exit{
+    if do_exit {
         exit(1);
     }
-
 }
 
-pub fn unexpected_assignment( token : &MewToken , code : &String , do_exit : bool ) {
+pub fn unexpected_assignment(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[5].to_string());
 
-    show_nice_error(token, code , ERROR_LIST[5].to_string());
-
-    if do_exit{
+    if do_exit {
         exit(1);
     }
-
 }
 
-pub fn unknown_atom(token : &MewToken , code : &String, do_exit : bool){
-
+pub fn unknown_atom(token: &MewToken, code: &str, do_exit: bool) {
     show_nice_error(token, code, ERROR_LIST[1].to_string());
-    if do_exit{
+    if do_exit {
         exit(1);
     }
-
 }
 
-pub fn loop_arg_wrong(token : &MewToken , code : &String, do_exit : bool){
-
-    show_nice_error(token, code, format!("{}\n{}" , ERROR_LIST[2] , LOOP_EXAMPLE));
-    if do_exit{
+pub fn loop_arg_wrong(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, format!("{}\n{}", ERROR_LIST[2], LOOP_EXAMPLE));
+    if do_exit {
         exit(1);
     }
-
 }
 
-
-
-pub fn if_arg_wrong(token : &MewToken , code : &String, do_exit : bool){
-
-    show_nice_error(token, code, format!("{}\n{}" , ERROR_LIST[3] , IF_EXAMPLE));
-    if do_exit{
+pub fn if_arg_wrong(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, format!("{}\n{}", ERROR_LIST[3], IF_EXAMPLE));
+    if do_exit {
         exit(1);
     }
-
 }
 
-fn show_nice_error(tok: &MewToken, source_code : &String  , err_msg: String) {
-    let mut xx = source_code.clone(); //cloning the source cause I don't want to mess up the origin source;
-                                      // the parser maybe able to catch other error; so source should not be mutated; I guess;
+fn show_nice_error(tok: &MewToken, source_code: &str, err_msg: String) {
+    let mut xx = source_code.to_string(); //cloning the source cause I don't want to mess up the origin source;
+                                          // the parser maybe able to catch other error; so source should not be mutated; I guess;
 
     //checks if the next char a linefeed char `\n` for below bug
     //BUG: If there is a linefeed char after the error token -
     //the token highlight is also including the `\n`
-    let newline_next = xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()
-        [tok.position.1 .1 - 1]
-        == "\n";
+    let newline_next =
+        xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()[tok.position.1 .1 - 1] == "\n";
 
     xx.insert_str(
         if newline_next {
