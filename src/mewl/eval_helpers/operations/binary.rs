@@ -43,7 +43,7 @@ pub fn do_binary_operation(op: &str, exp_args: Vec<Atom>, source: &str) -> Atom 
                 .unwrap();
         }
 
-        ">" | "<" | "==" | "!=" | "<=" | ">=" => {
+        ">" | "<" | "==" | "!=" | "<=" | ">=" | "@" | "#" | "!!" => {
             let flat_list: Vec<f64> = extracted_atom_list.into_iter().flatten().collect();
 
             result = match flat_list.is_empty() {

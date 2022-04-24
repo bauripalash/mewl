@@ -15,3 +15,9 @@ pub struct MewToken {
     pub lexeme: String,
     pub position: (usize, (usize, usize)), //[line number, [start position, end position ]]
 }
+
+pub const OPERATORS: [&str; 17] = [
+    "+", "-", "*", "/", "::", ":::", ">", "<", "==", "!=", "<=", ">=", "@", "?",
+    "&" , "#" , "!!"
+];
+

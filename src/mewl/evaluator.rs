@@ -4,11 +4,7 @@ use crate::mewl::eval_helpers::mewcheck::*;
 use crate::mewl::eval_helpers::operations::binary::do_binary_operation;
 use crate::mewl::types::*;
 use std::collections::HashMap;
-use std::process::exit;
 
-const OPERATORS: [&str; 14] = [
-    "+", "-", "*", "/", "::", ":::", ">", "<", "==", "!=", "<=", ">=", "@", "?",
-];
 
 pub struct MewlEvaluator {
     pub expression: Expr,
@@ -180,7 +176,7 @@ impl MewlEvaluator {
                                     //check if assignment; mew number with `=`
                                     if !atom_list.is_empty() {
                                         self.do_assignment(
-                                            &symbol.lexeme,
+                                            &symbol,
                                             &atom_list,
                                             symbol_table,
                                         );
@@ -222,16 +218,17 @@ impl MewlEvaluator {
 
     fn do_assignment(
         &self,
-        identifer: &str,
+        identifer: &MewToken,
         atom: &[Atom],
         symbol_table: &mut HashMap<String, f64>,
     ) {
         // the argument we got will be something like `=mewmew` so, what we have to is convert it
         // to something like `~mewmew` , so it can be found on the symbol table later;
-        let mut p_id: Vec<String> = identifer.chars().map(|c| c.to_string()).collect();
+        let mut p_id: Vec<String> = identifer.lexeme.chars().map(|c| c.to_string()).collect();
         p_id[0] = "~".to_string();
         let id = p_id.join("");
-
+            
+        //nice_error_atom_list(&atom, &self.source, "error list".to_string(), false);
         let mut value: f64 = 0.0;
         if atom.len() > 1 {
             // What is happening here is =>
@@ -257,10 +254,13 @@ impl MewlEvaluator {
             match temp_value {
                 Ok(v) => value = v,
                 Err(_) => {
-                    eprintln!(
-                        "Failed to join expression list and create a single value for assignment"
-                    );
-                    exit(1);
+                    //eprintln!(
+                    //    "Failed to join expression list and create a single value for assignment"
+                    //);
+                    //
+                    //
+                    expresion_combine_failed(identifer, &self.source, true);
+                    //exit(1);
                 }
             }
         } else if let Atom::Number(n) = atom[0].to_owned() {

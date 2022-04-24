@@ -1,18 +1,27 @@
 use crate::mewl::types::*;
 use std::process::exit;
 
-const ERROR_LIST: [&str; 6] = [
+const ERROR_LIST: [&str; 7] = [
     "Sorry! I don't know the value of this variable!", // [0] //Undefined variable
     "Uh! I can't recognize this symbol! What to do with this?", // [1] //Unexpected symbol/char/atom
     "Please provide correct number of expression for this *loop*", // [2] // loop statement arguments wrong
     "Can not find correct number of arguments for this *if* expression", // [3] // if statement arguments wrong
     "No *expression(s)* provided after this Identifier to assign to it.", // [4] // no expression after identifier
     "Uh! I was not expecting a assignment here!", //[5] // unexpected assignment statement
+    "I cannot combine the *expressions* for this assignment operation" // [6] //failed to combine expression for assignment
 ];
 
 const LOOP_EXAMPLE: &str =
     "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
 const IF_EXAMPLE : &str = "Do something like this => \n [ ? [ Condition ] [ Body ] [ False/Else Body ] ]! (False/Else is optional)";
+
+
+pub fn expresion_combine_failed(token : &MewToken , code: &str , do_exit: bool){
+        show_nice_error(token, code, ERROR_LIST[6].to_string());
+        if do_exit{
+            exit(1);
+        }
+}
 
 pub fn undefined_var(token: &MewToken, code: &str, do_exit: bool) {
     show_nice_error(token, code, ERROR_LIST[0].to_string());
@@ -58,6 +67,26 @@ pub fn if_arg_wrong(token: &MewToken, code: &str, do_exit: bool) {
         exit(1);
     }
 }
+
+pub fn nice_error_atom_list(atom_list : &[Atom] , source_code: &str , err_msg: String , do_exit: bool){
+        
+    if atom_list.len() == 1{
+        if let Atom::Sym(s) = &atom_list[0]{
+        show_nice_error(&s, source_code, err_msg);
+        if do_exit{
+            exit(1);
+        }
+        }
+    }
+    let mut mewtok_list : Vec<MewToken> = vec![];
+    for atom in atom_list{
+        if let Atom::Sym(s) = atom{
+            mewtok_list.push(s.to_owned());
+        }
+    }
+    print!("{:?}\n" , mewtok_list);
+}
+
 
 fn show_nice_error(tok: &MewToken, source_code: &str, err_msg: String) {
     let mut xx = source_code.to_string(); //cloning the source cause I don't want to mess up the origin source;
