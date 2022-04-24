@@ -5,7 +5,6 @@ use crate::mewl::eval_helpers::operations::binary::do_binary_operation;
 use crate::mewl::types::*;
 use std::collections::HashMap;
 
-
 pub struct MewlEvaluator {
     pub expression: Expr,
     pub source: String,
@@ -175,11 +174,7 @@ impl MewlEvaluator {
                                 } else if is_this_assignment(symbol) {
                                     //check if assignment; mew number with `=`
                                     if !atom_list.is_empty() {
-                                        self.do_assignment(
-                                            &symbol,
-                                            &atom_list,
-                                            symbol_table,
-                                        );
+                                        self.do_assignment(symbol, &atom_list, symbol_table);
                                         return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
                                     } else {
                                         no_expression_after_id(symbol, &self.source, true);
@@ -227,7 +222,7 @@ impl MewlEvaluator {
         let mut p_id: Vec<String> = identifer.lexeme.chars().map(|c| c.to_string()).collect();
         p_id[0] = "~".to_string();
         let id = p_id.join("");
-            
+
         //nice_error_atom_list(&atom, &self.source, "error list".to_string(), false);
         let mut value: f64 = 0.0;
         if atom.len() > 1 {
