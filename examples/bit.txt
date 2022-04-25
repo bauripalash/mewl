@@ -1,0 +1,6 @@
+[:: [&& mewmew mewmewmew ]]
+[:: [## mewmew mewmewmew]]
+[:: [^ mewmew mewmewmew ]]
+[:: [!! mewmewmew]]
+[:: [<< mewmew mewmewmew]]
+[:: [>> mewmew mewmewmew]]

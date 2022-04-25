@@ -1,9 +1,13 @@
+use std::process::exit;
+
 use crate::mewl::eval_helpers::atomic::*;
 use crate::mewl::eval_helpers::operations::comparison::do_comparison;
-use crate::mewl::types::Atom;
+use crate::mewl::types::{Atom, MewToken};
+use crate::mewl::errors::expresion_combine_failed;
 
-pub fn do_binary_operation(op: &str, exp_args: Vec<Atom>, source: &str) -> Atom {
+pub fn do_binary_operation(op_token: &MewToken, exp_args: Vec<Atom>, source: &str) -> Atom {
     //println!("{:?}" , exp_args);
+    let op = op_token.lexeme.as_str();
     let extracted_atom_list: Vec<Option<f64>> = exp_args
         .into_iter()
         .map(|a| extract_atom(&a, source))
@@ -43,7 +47,90 @@ pub fn do_binary_operation(op: &str, exp_args: Vec<Atom>, source: &str) -> Atom 
                 .unwrap();
         }
 
-        ">" | "<" | "==" | "!=" | "<=" | ">=" | "@" | "#" | "!!" => {
+        "**" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b| a.powf(b))
+                .unwrap();
+        }
+
+        ">>" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b|  ((a as i64) >> (b as i64)) as f64)
+                .unwrap();
+        }
+
+
+
+        "<<" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b| ((a as i64) << (b as i64)) as f64)
+                .unwrap();
+        }
+
+
+        "&&" => {
+
+
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b| ((a as i64) & (b as i64)) as f64)
+                .unwrap();
+        }
+
+
+
+
+        "^" => {
+
+
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b| ((a as i64) ^ (b as i64)) as f64)
+                .unwrap();
+        }
+
+        "##" => {
+
+
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .reduce(|a,b| ((a as i64) | (b as i64)) as f64)                
+                .unwrap();
+        }
+
+
+        "!!" => {
+
+
+
+            let temp = match extracted_atom_list
+                .into_iter()
+                .flatten()
+                .into_iter()
+                .nth(0) {
+                  Some(v)  => v,
+                  None => { expresion_combine_failed(op_token, source, false); exit(1); }
+                };
+
+            result = !(temp as i64) as f64;
+        }
+
+        ">" | "<" | "==" | "!=" | "<=" | ">=" | "@" | "#" | "!" => {
             let flat_list: Vec<f64> = extracted_atom_list.into_iter().flatten().collect();
 
             result = match flat_list.is_empty() {

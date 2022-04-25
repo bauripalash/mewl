@@ -162,7 +162,7 @@ impl MewlEvaluator {
                                 if OPERATORS.contains(&symbol.lexeme.as_str()) {
                                     return (
                                         Some(do_binary_operation(
-                                            symbol.lexeme.as_str(),
+                                            symbol,
                                             atom_list,
                                             &self.source,
                                         )),
