@@ -11,34 +11,33 @@ const ERROR_LIST: [&str; 10] = [
     "I cannot combine the *expressions* for this assignment operation", // [6] //failed to combine expression for assignment
     "Please provide a assignment mew symbol after this read input function", // [7] //Read MewNum/Number from stdin
     "I was not expecting a number as argument for this read input function", // [8] Got a number argument for stdin function
-    "Please only provide a single assignment expression as argument to stdin function" //[9] //got multiple expressions after stdin function
+    "Please only provide a single assignment expression as argument to stdin function", //[9] //got multiple expressions after stdin function
 ];
 
 const LOOP_EXAMPLE: &str =
     "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
 const IF_EXAMPLE : &str = "Do something like this => \n [ ? [ Condition ] [ Body ] [ False/Else Body ] ]! (False/Else is optional)";
 
-pub fn multiple_exp_after_stdin(token: &MewToken , code: &str , do_exit: bool){
-    show_nice_error(token , code , ERROR_LIST[9].to_string());
-    
-    if do_exit{
+pub fn multiple_exp_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[9].to_string());
+
+    if do_exit {
         exit(1);
     }
 }
 
-pub fn no_assignment_symbol_after_stdin(token: &MewToken , code: &str , do_exit: bool){
-    show_nice_error(token , code , ERROR_LIST[7].to_string());
-    
-    if do_exit{
+pub fn no_assignment_symbol_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[7].to_string());
+
+    if do_exit {
         exit(1);
     }
 }
 
+pub fn number_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[8].to_string());
 
-pub fn number_after_stdin(token: &MewToken , code: &str , do_exit: bool){
-    show_nice_error(token , code , ERROR_LIST[8].to_string());
-    
-    if do_exit{
+    if do_exit {
         exit(1);
     }
 }

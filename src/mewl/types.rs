@@ -41,6 +41,6 @@ pub const OPERATORS: [&str; 26] = [
     "!!",  // Bitwise NOT
     "##",  // Bitwise OR
     "&&",  //Bitwise AND
-    "|>",       // take input
-    "||>"           // take input; return the length
+    "|>",  // take input
+    "||>", // take input; return the length
 ];
