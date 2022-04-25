@@ -1,7 +1,7 @@
 use crate::mewl::types::*;
 use std::process::exit;
 
-const ERROR_LIST: [&str; 7] = [
+const ERROR_LIST: [&str; 10] = [
     "Sorry! I don't know the value of this variable!", // [0] //Undefined variable
     "Uh! I can't recognize this symbol! What to do with this?", // [1] //Unexpected symbol/char/atom
     "Please provide correct number of expression for this *loop*", // [2] // loop statement arguments wrong
@@ -9,11 +9,39 @@ const ERROR_LIST: [&str; 7] = [
     "No *expression(s)* provided after this Identifier to assign to it.", // [4] // no expression after identifier
     "Uh! I was not expecting a assignment here!", //[5] // unexpected assignment statement
     "I cannot combine the *expressions* for this assignment operation", // [6] //failed to combine expression for assignment
+    "Please provide a assignment mew symbol after this read input function", // [7] //Read MewNum/Number from stdin
+    "I was not expecting a number as argument for this read input function", // [8] Got a number argument for stdin function
+    "Please only provide a single assignment expression as argument to stdin function" //[9] //got multiple expressions after stdin function
 ];
 
 const LOOP_EXAMPLE: &str =
     "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
 const IF_EXAMPLE : &str = "Do something like this => \n [ ? [ Condition ] [ Body ] [ False/Else Body ] ]! (False/Else is optional)";
+
+pub fn multiple_exp_after_stdin(token: &MewToken , code: &str , do_exit: bool){
+    show_nice_error(token , code , ERROR_LIST[9].to_string());
+    
+    if do_exit{
+        exit(1);
+    }
+}
+
+pub fn no_assignment_symbol_after_stdin(token: &MewToken , code: &str , do_exit: bool){
+    show_nice_error(token , code , ERROR_LIST[7].to_string());
+    
+    if do_exit{
+        exit(1);
+    }
+}
+
+
+pub fn number_after_stdin(token: &MewToken , code: &str , do_exit: bool){
+    show_nice_error(token , code , ERROR_LIST[8].to_string());
+    
+    if do_exit{
+        exit(1);
+    }
+}
 
 pub fn expresion_combine_failed(token: &MewToken, code: &str, do_exit: bool) {
     show_nice_error(token, code, ERROR_LIST[6].to_string());
@@ -67,6 +95,7 @@ pub fn if_arg_wrong(token: &MewToken, code: &str, do_exit: bool) {
     }
 }
 
+//TODO
 pub fn nice_error_atom_list(atom_list: &[Atom], source_code: &str, err_msg: String, do_exit: bool) {
     if atom_list.len() == 1 {
         if let Atom::Sym(s) = &atom_list[0] {

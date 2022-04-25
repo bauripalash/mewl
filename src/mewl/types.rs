@@ -16,7 +16,7 @@ pub struct MewToken {
     pub position: (usize, (usize, usize)), //[line number, [start position, end position ]]
 }
 
-pub const OPERATORS: [&str; 24] = [
+pub const OPERATORS: [&str; 26] = [
     "+",   //Addition
     "-",   //Substraction
     "*",   //Multiplication
@@ -41,4 +41,6 @@ pub const OPERATORS: [&str; 24] = [
     "!!",  // Bitwise NOT
     "##",  // Bitwise OR
     "&&",  //Bitwise AND
+    "|>",       // take input
+    "||>"           // take input; return the length
 ];
