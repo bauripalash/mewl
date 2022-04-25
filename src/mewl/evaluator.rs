@@ -161,11 +161,7 @@ impl MewlEvaluator {
                             Atom::Sym(symbol) => {
                                 if OPERATORS.contains(&symbol.lexeme.as_str()) {
                                     return (
-                                        Some(do_binary_operation(
-                                            symbol,
-                                            atom_list,
-                                            &self.source,
-                                        )),
+                                        Some(do_binary_operation(symbol, atom_list, &self.source)),
                                         None,
                                     );
                                 //we only need to check if it is a assignment expression or not;
