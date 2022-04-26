@@ -16,11 +16,12 @@ pub struct MewToken {
     pub position: (usize, (usize, usize)), //[line number, [start position, end position ]]
 }
 
-pub const OPERATORS: [&str; 26] = [
+pub const OPERATORS: [&str; 27] = [
     "+",   //Addition
     "-",   //Substraction
     "*",   //Multiplication
     "/",   //Division
+    "%",       //mod
     "::",  //Print as is (Array or just single element)
     ":::", //print as char
     ">",   // A > B ==> A is greater than B

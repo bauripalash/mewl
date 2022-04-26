@@ -30,6 +30,15 @@ pub fn do_binary_operation(op_token: &MewToken, exp_args: Vec<Atom>, source: &st
                 .unwrap();
         }
 
+
+        "%" => {
+            result = extracted_atom_list
+                .into_iter()
+                .flatten()
+                .reduce(|a, b| a % b)
+                .unwrap();
+        }
+
         "*" => {
             result = extracted_atom_list
                 .into_iter()

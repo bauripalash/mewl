@@ -1,0 +1,24 @@
+[=mew [[+[* mewmewmew mewmew] mew] mewmew] ] //H
+[=mewmew [mew [- mew mew] mew]] //e
+[=mewmewmew [mew [- mew mew] [* mewmewmewmew mewmew]]] //l
+[=mewmewmewmew [mew mew mew]] //o
+[=mewmewmewmewmew [mewmewmew mewmew]] //SPACE
+[=mewmewmewmewmewmew [[* mewmewmewmew mewmew] mewmewmewmewmewmewmew]] //W
+[=mewmewmewmewmewmewmew [mew mew mewmewmewmew]] //r
+[=mewmewmewmewmewmewmewmew [mew [- mew mew] [- mew mew]]] //d
+[=mewmewmewmewmewmewmewmewmew [mewmewmew mewmewmew]] //!
+
+[::: ~mew //H
+~mewmew //e
+~mewmewmew //l
+~mewmewmew //l
+~mewmewmewmew //o
+~mewmewmewmewmew //SPACE 
+~mewmewmewmewmewmew //W
+~mewmewmewmew //o
+~mewmewmewmewmewmewmew //r
+~mewmewmew //l
+~mewmewmewmewmewmewmewmew //d
+~mewmewmewmewmewmewmewmewmew //!
+]
+
