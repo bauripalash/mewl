@@ -236,11 +236,11 @@ impl MewlEvaluator {
                                 0.0
                             };
 
-                            let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                            let body = expr_list.drain(..1).collect::<Vec<Expr>>();
 
                             if condition >= 1.0 {
                                 loop {
-                                    self.evaluate(&mut body[0], symbol_table);
+                                    self.evaluate(&mut body.clone()[0], symbol_table);
 
                                     condition_temp =
                                         self.evaluate(&mut con_expr[1], symbol_table).0;
@@ -270,14 +270,17 @@ impl MewlEvaluator {
                             }
 
                             let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
+                            //println!("=> condition => {:?}" , con_expr[1]);
                             let condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+                            //println!("{:?}" , self.evaluate(&mut con_expr.clone()[1], symbol_table));
                             let condition: f64 = if let Some(Atom::Number(n)) = condition_temp {
                                 n
                             } else {
                                 0.0
                             };
-
+                            //println!("=> {}" , condition);
                             let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                            //println!("{:?}" , body);
                             if condition >= 1.0 {
                                 return self.evaluate(&mut body[0], symbol_table);
 

@@ -1,0 +1,4 @@
+[=mew mew] //start //1
+[=mewmew [mewmewmewmewmew [- mew mew]]] //target //50
+
+[@ [< ~mew ~mewmew] [ [? [== [% ~mew mewmew] [- mew mew]] [:: ~mew]]  [=mew [+ ~mew mew]]] ]

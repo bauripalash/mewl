@@ -1,0 +1,4 @@
+[=mew mewmew]
+[@ [!= ~mew mewmewmewmewmew]
+[[? [== [% mewmewmewmew ~mew] [- mew mew]] [:: ~mew]][=mew [+ ~mew mew]]]
+]
