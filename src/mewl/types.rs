@@ -21,7 +21,7 @@ pub const OPERATORS: [&str; 27] = [
     "-",   //Substraction
     "*",   //Multiplication
     "/",   //Division
-    "%",       //mod
+    "%",   //mod
     "::",  //Print as is (Array or just single element)
     ":::", //print as char
     ">",   // A > B ==> A is greater than B

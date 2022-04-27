@@ -1,10 +1,7 @@
 pub fn do_comparison(op: &str, exp_args: Vec<f64>) -> f64 {
     //println!("=> ->{}<- COMP => {:?}" , op ,exp_args);
     let temp_res: Option<&f64> = match op {
-        "==" => exp_args
-            .windows(2)
-            .all(|a| a[0] == a[1])
-            .then(|| &1_f64),
+        "==" => exp_args.windows(2).all(|a| a[0] == a[1]).then(|| &1_f64),
         "!=" => exp_args
             .windows(2)
             .all(|a| a[0] != a[1])
@@ -50,7 +47,6 @@ pub fn do_comparison(op: &str, exp_args: Vec<f64>) -> f64 {
     };
     //println!("{:?}" , temp_res);
     if temp_res.is_some() {
-        
         1.0
     } else {
         0.0

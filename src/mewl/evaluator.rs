@@ -1,5 +1,5 @@
 use crate::mewl::errors::*;
-use crate::mewl::eval_helpers::atomic::extract_atom;
+use crate::mewl::eval_helpers::atomic::{convert_from_mewnum, extract_atom};
 use crate::mewl::eval_helpers::mewcheck::*;
 use crate::mewl::eval_helpers::operations::binary::do_binary_operation;
 use crate::mewl::types::*;
@@ -142,7 +142,7 @@ impl MewlEvaluator {
                             };
                             let mut temp_atom: Atom = Atom::Number(0.0);
                             if is_this_mewnum(&temp_token) {
-                                temp_atom = Atom::Number((input_buffer.len() / 3) as f64);
+                                temp_atom = Atom::Number(convert_from_mewnum(&temp_token.lexeme));
                             } else {
                                 let t = match input_buffer.parse::<f64>() {
                                     Ok(v) => v,

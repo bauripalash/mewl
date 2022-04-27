@@ -3,6 +3,10 @@ use std::process::exit;
 use crate::mewl::evaluator::MewlEvaluator;
 use crate::mewl::types::*;
 
+use super::errors::{no_closing_bracket, unexpected_closing_bracket};
+use super::eval_helpers::atomic::convert_from_mewnum;
+use super::eval_helpers::mewcheck::is_this_mewnum;
+
 #[allow(dead_code)]
 pub struct MewlParser {
     source: String, //Source string as is; could've used a simple vector but this is String for now for the show_nice_error() function to work properly
@@ -130,10 +134,7 @@ impl MewlParser {
                     */
                     if raw_tokens.is_empty() {
                         // if tokens are empty; that might suggest that some brackets are still open; so error!
-                        self.show_nice_error(
-                            &current_token,
-                            "Cannot find closing bracket for this opening bracket".to_string(),
-                        );
+                        no_closing_bracket(&current_token, &self.source, false);
                         exit(1);
                     }
                 }
@@ -146,7 +147,8 @@ impl MewlParser {
                 output
             }
             "]" => {
-                self.show_nice_error(&current_token, "Unexpected Closing bracket!".to_string());
+                //self.show_nice_error(&current_token, "Unexpected Closing bracket!".to_string());
+                unexpected_closing_bracket(&current_token, &self.source, false);
                 exit(1);
             }
             _ => {
@@ -156,91 +158,13 @@ impl MewlParser {
         }
     }
 
-    fn show_nice_error(&self, tok: &MewToken, err_msg: String) {
-        let mut xx = self.source.clone(); //cloning the source cause I don't want to mess up the origin source;
-                                          // the parser maybe able to catch other error; so source should not be mutated; I guess;
-
-        //checks if the next char a linefeed char `\n` for below bug
-        //BUG: If there is a linefeed char after the error token -
-        //the token highlight is also including the `\n`
-        let newline_next = xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()
-            [tok.position.1 .1 - 1]
-            == "\n";
-
-        xx.insert_str(
-            if newline_next {
-                tok.position.1 .1 - 1
-            } else {
-                tok.position.1 .1
-            },
-            " <-\x1b[0m",
-        );
-
-        xx.insert_str(tok.position.1 .0 - 1, " \x1b[96;1m-> ");
-
-        let o: Vec<String> = xx
-            .split_terminator('\n')
-            .into_iter()
-            .map(|i| i.trim().to_string().replace('\n', ""))
-            .collect();
-
-        let mut line_index = tok.position.0;
-        if newline_next {
-            line_index -= 2
-        } else {
-            line_index -= 1
-        }
-
-        if !err_msg.is_empty() {
-            eprintln!("\x1b[95m[Eh!] : {} \x1b[0m\n", err_msg);
-        }
-
-        //line before the error line
-        if line_index != 0 && o.len() > line_index {
-            println!("|{}| {}", line_index, o[line_index - 1])
-        }
-        //error token's line
-        println!("|{}| {}", line_index + 1, o[line_index]);
-
-        //next line after error
-        if line_index < o.len() {
-            println!("|{}| {}", line_index + 2, o[line_index + 1])
-        }
-
-        //exit(1);
-    }
-
     fn parse_raw_atom(&self, token: &MewToken) -> Atom {
         //println!("<<<<<<<|{}|=>>>>>>{:?}" , token.lexeme , self.is_mewnum(token));
-        if self.is_mewnum(token) {
+        if is_this_mewnum(token) {
             //TODO: Fix
-            return Atom::Number(token.lexeme.len() as f64 / 3.0);
+            return Atom::Number(convert_from_mewnum(token.lexeme.as_str()));
         }
 
         Atom::Sym(token.to_owned())
-    }
-
-    fn is_mewnum(&self, token: &MewToken) -> bool {
-        //println!("IS_MEWNUM=> {:?}" , token);
-        let mut token_lexeme = token.lexeme.chars();
-        //let mut result = false;
-        if token_lexeme.as_str().len() < 3 {
-            return false;
-        }
-
-        while !token_lexeme.as_str().is_empty() {
-            if token_lexeme.next() != Some('m') {
-                return false;
-            }
-            if token_lexeme.next() != Some('e') {
-                return false;
-            }
-
-            if token_lexeme.next() != Some('w') {
-                return false;
-            }
-        }
-
-        true
     }
 }

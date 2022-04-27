@@ -27,3 +27,33 @@ pub fn extract_atom(atom: &Atom, source: &str) -> Option<f64> {
         }
     }
 }
+
+pub fn convert_from_mewnum(lexeme: &str) -> f64 {
+    //let lexeme = &token.lexeme;
+
+    if lexeme.contains('.') {
+        let raw_mews: Vec<&str> = lexeme.trim().split('.').collect();
+        if raw_mews.len() > 2 {
+            println!("MULTIPLE `.` => {:?}", lexeme);
+            exit(1);
+        }
+        let first_part = raw_mews[0];
+        let sec_part = raw_mews[1];
+        //println!("{:?}")
+        let output = format!(
+            "{}.{}",
+            (first_part.len() as f64 / 3.0),
+            (sec_part.len() as f64 / 3.0)
+        );
+
+        let x = match output.parse::<f64>() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!("Failed to parse this expresssion -> {} as float", lexeme);
+                exit(1);
+            }
+        };
+        return x;
+    }
+    lexeme.len() as f64 / 3.0
+}

@@ -1,7 +1,7 @@
 use crate::mewl::types::*;
 use std::process::exit;
 
-const ERROR_LIST: [&str; 10] = [
+const ERROR_LIST: [&str; 12] = [
     "Sorry! I don't know the value of this variable!", // [0] //Undefined variable
     "Uh! I can't recognize this symbol! What to do with this?", // [1] //Unexpected symbol/char/atom
     "Please provide correct number of expression for this *loop*", // [2] // loop statement arguments wrong
@@ -12,12 +12,28 @@ const ERROR_LIST: [&str; 10] = [
     "Please provide a assignment mew symbol after this read input function", // [7] //Read MewNum/Number from stdin
     "I was not expecting a number as argument for this read input function", // [8] Got a number argument for stdin function
     "Please only provide a single assignment expression as argument to stdin function", //[9] //got multiple expressions after stdin function
+    "I was not expecting a closing bracket here!",
+    "Uh! Cannot find a closing bracket for this opening bracket",
 ];
 
 const LOOP_EXAMPLE: &str =
     "Do something like this => \n [ @ [ Condition ] [ Body ] [ Return ] ]! (Return is optional)";
 const IF_EXAMPLE : &str = "Do something like this => \n [ ? [ Condition ] [ Body ] [ False/Else Body ] ]! (False/Else is optional)";
 
+pub fn no_closing_bracket(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[11].to_string());
+
+    if do_exit {
+        exit(1);
+    }
+}
+pub fn unexpected_closing_bracket(token: &MewToken, code: &str, do_exit: bool) {
+    show_nice_error(token, code, ERROR_LIST[10].to_string());
+
+    if do_exit {
+        exit(1);
+    }
+}
 pub fn multiple_exp_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
     show_nice_error(token, code, ERROR_LIST[9].to_string());
 
