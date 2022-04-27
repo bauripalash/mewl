@@ -1,0 +1,20 @@
+[=mewmew [- mew mew]] //a
+[=mewmewmew mew] //b
+[=mewmewmewmewmew mew] //c
+[=mew [+ mew mew]] //i
+
+[=mewmewmewmew [mewmew [- mew mew]]] //n => target `N`th 
+[:: ~mewmew]
+[:: ~mewmewmew]
+
+//loop while n>=i
+
+[@ [>= ~mewmewmewmew ~mew]
+[ [=mewmewmewmewmew  [+ ~mewmew ~mewmewmew]] //c=a+b 
+[:: ~mewmewmewmewmew] //print c
+[=mewmew ~mewmewmew] //a=b
+[=mewmewmew ~mewmewmewmewmew] //b=c
+[=mew [+ ~mew mew]] ] //i += 1
+
+
+]
