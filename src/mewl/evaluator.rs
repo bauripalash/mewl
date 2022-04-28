@@ -68,162 +68,250 @@ impl MewlEvaluator {
         }
     }
 
+    fn evaluate_stdin_expr(
+        &mut self,
+        s: &MewToken,
+        expr_list: &mut Vec<Expr>,
+        symbol_table: &mut HashMap<String, f64>,
+    ) {
+        if expr_list.len() != 2 {
+            //println!("{:?}", expr_list);
+            //eprintln!("Please provide a identifier to store the input");
+            //exit(1);
+            //
+            no_assignment_symbol_after_stdin(s, &self.source, true);
+        }
 
-    fn evaluate_stdin_expr(&mut self, s : &MewToken  , expr_list: &mut Vec<Expr> , symbol_table: &mut HashMap<String, f64>){
-        
-                        if expr_list.len() != 2 {
-                            //println!("{:?}", expr_list);
-                            //eprintln!("Please provide a identifier to store the input");
-                            //exit(1);
-                            //
-                            no_assignment_symbol_after_stdin(s, &self.source, true);
-                        }
+        let identifer = expr_list.drain(1..2).collect::<Vec<Expr>>();
+        let mut identifier_name: String = String::new();
+        let mut input_buffer: String = String::new();
 
-                        let identifer = expr_list.drain(1..2).collect::<Vec<Expr>>();
-                        let mut identifier_name: String = String::new();
-                        let mut input_buffer: String = String::new();
+        match &identifer[0] {
+            Expr::Atom(atm) => match atm {
+                Atom::Sym(id) => {
+                    if is_this_assignment(id) {
+                        identifier_name = id.lexeme.clone();
+                    } else if is_this_identifier(id) {
+                        let mut x = id.lexeme.chars();
+                        x.next();
+                        let temp_wrong_id = x.collect::<String>();
+                        eprintln!("Did you meant to write ={}", temp_wrong_id);
+                        exit(1);
+                    } else {
+                        //eprintln!()
+                        unknown_atom(id, &self.source, true);
+                    }
+                }
+                Atom::Number(_) => {
+                    number_after_stdin(s, &self.source, true);
+                }
+            },
+            Expr::List(l) => {
+                //println!("{:?}" , expr_list)
+                if l.len() != 1 {
+                    //println!("Please provide a single assignment mew symbol for stdin input operation");
 
-                        match &identifer[0] {
-                            Expr::Atom(atm) => match atm {
-                                Atom::Sym(id) => {
-                                    if is_this_assignment(id) {
-                                        identifier_name = id.lexeme.clone();
-                                    } else if is_this_identifier(id) {
-                                        let mut x = id.lexeme.chars();
-                                        x.next();
-                                        let temp_wrong_id = x.collect::<String>();
-                                        eprintln!("Did you meant to write ={}", temp_wrong_id);
-                                        exit(1);
-                                    } else {
-                                        //eprintln!()
-                                        unknown_atom(id, &self.source, true);
-                                    }
-                                }
-                                Atom::Number(_) => {
-                                    number_after_stdin(s, &self.source, true);
-                                }
-                            },
-                            Expr::List(l) => {
-                                //println!("{:?}" , expr_list)
-                                if l.len() != 1 {
-                                    //println!("Please provide a single assignment mew symbol for stdin input operation");
+                    //exit(1);
+                    //
+                    multiple_exp_after_stdin(s, &self.source, true);
+                } else if let Expr::Atom(Atom::Sym(id)) = &l[0] {
+                    identifier_name = id.lexeme.clone();
+                } else if let Expr::Atom(Atom::Number(_)) = &l[0] {
+                    //eprintln!("I was not expecting a number here!");
+                    //exit(1);
 
-                                    //exit(1);
-                                    //
-                                    multiple_exp_after_stdin(s, &self.source, true);
-                                } else if let Expr::Atom(Atom::Sym(id)) = &l[0] {
-                                    identifier_name = id.lexeme.clone();
-                                } else if let Expr::Atom(Atom::Number(_)) = &l[0] {
-                                    //eprintln!("I was not expecting a number here!");
-                                    //exit(1);
+                    number_after_stdin(s, &self.source, true);
+                }
+            }
+        }
 
-                                    number_after_stdin(s, &self.source, true);
-                                }
-                            }
-                        }
+        if !identifier_name.is_empty() {
+            match io::stdin().read_line(&mut input_buffer) {
+                Ok(_) => {}
+                Err(_) => {
+                    eprintln!("Failed to read the input!");
+                    exit(1);
+                }
+            }
+        }
 
-                        if !identifier_name.is_empty() {
-                            match io::stdin().read_line(&mut input_buffer) {
-                                Ok(_) => {}
-                                Err(_) => {
-                                    eprintln!("Failed to read the input!");
-                                    exit(1);
-                                }
-                            }
-                        }
+        input_buffer = input_buffer.trim_end().to_owned();
+        let temp_token = MewToken {
+            lexeme: input_buffer.clone(),
+            position: (0, (0, 0)),
+        };
+        let temp_atom: Atom = if is_this_mewnum(&temp_token) {
+            Atom::Number(convert_from_mewnum(&temp_token.lexeme))
+        } else {
+            let t = match input_buffer.parse::<f64>() {
+                Ok(v) => v,
+                Err(_) => {
+                    eprintln!(
+                        "Failed to parse the input; it is not a mewnum or traditional number!"
+                    );
+                    exit(1);
+                }
+            };
 
-                        input_buffer = input_buffer.trim_end().to_owned();
-                        let temp_token = MewToken {
-                            lexeme: input_buffer.clone(),
-                            position: (0, (0, 0)),
-                        };
-                        let temp_atom: Atom = if is_this_mewnum(&temp_token) {
-                            Atom::Number(convert_from_mewnum(&temp_token.lexeme))
-                        } else {
-                            let t = match input_buffer.parse::<f64>() {
-                                Ok(v) => v,
-                                Err(_) => {
-                                    eprintln!("Failed to parse the input; it is not a mewnum or traditional number!");
-                                    exit(1);
-                                }
-                            };
-
-                            Atom::Number(t)
-                        };
-                        let temp_id_token = MewToken {
-                            lexeme: identifier_name,
-                            position: (0, (0, 0)),
-                        };
-                        self.do_assignment(&temp_id_token, &[temp_atom], symbol_table);
-
+            Atom::Number(t)
+        };
+        let temp_id_token = MewToken {
+            lexeme: identifier_name,
+            position: (0, (0, 0)),
+        };
+        self.do_assignment(&temp_id_token, &[temp_atom], symbol_table);
     }
 
-    fn evaluate_stdin_len_expr(&mut self , s : &MewToken , expr_list: &mut Vec<Expr> , symbol_table: &mut HashMap<String, f64>){
-            
-                        if expr_list.len() != 2 {
-                            //println!("{:?}", expr_list);
-                            //eprintln!("Please provide a identifier to store the input");
-                            //exit(1);
-                            no_assignment_symbol_after_stdin(s, &self.source, true);
-                        }
+    fn evaluate_stdin_len_expr(
+        &mut self,
+        s: &MewToken,
+        expr_list: &mut Vec<Expr>,
+        symbol_table: &mut HashMap<String, f64>,
+    ) {
+        if expr_list.len() != 2 {
+            //println!("{:?}", expr_list);
+            //eprintln!("Please provide a identifier to store the input");
+            //exit(1);
+            no_assignment_symbol_after_stdin(s, &self.source, true);
+        }
 
-                        let identifer = expr_list.drain(1..2).collect::<Vec<Expr>>();
-                        let mut identifier_name: String = String::new();
-                        let mut input_buffer: String = String::new();
+        let identifer = expr_list.drain(1..2).collect::<Vec<Expr>>();
+        let mut identifier_name: String = String::new();
+        let mut input_buffer: String = String::new();
 
-                        match &identifer[0] {
-                            Expr::Atom(atm) => match atm {
-                                Atom::Sym(id) => {
-                                    if is_this_assignment(id) {
-                                        identifier_name = id.lexeme.clone();
-                                    } else if is_this_identifier(id) {
-                                        let mut x = id.lexeme.chars();
-                                        x.next();
-                                        let temp_wrong_id = x.collect::<String>();
-                                        eprintln!("Did you meant to write ={}", temp_wrong_id);
-                                        exit(1);
-                                    } else {
-                                        //eprintln!()
-                                        unknown_atom(id, &self.source, true);
-                                    }
-                                }
-                                Atom::Number(_) => number_after_stdin(s, &self.source, true),
-                            },
-                            Expr::List(l) => {
-                                //println!("{:?}" , expr_list)
-                                if l.len() != 1 {
-                                    multiple_exp_after_stdin(s, &self.source, true);
-                                    //println!("Please provide a single assignment mew symbol for stdin input operation");
-                                    //exit(1);
-                                } else if let Expr::Atom(Atom::Sym(id)) = &l[0] {
-                                    identifier_name = id.lexeme.clone();
-                                } else if let Expr::Atom(Atom::Number(_)) = &l[0] {
-                                    //eprintln!("I was not expecting a number here!");
-                                    //exit(1);
-                                    //
-                                    number_after_stdin(s, &self.source, true);
-                                }
-                            }
-                        }
+        match &identifer[0] {
+            Expr::Atom(atm) => match atm {
+                Atom::Sym(id) => {
+                    if is_this_assignment(id) {
+                        identifier_name = id.lexeme.clone();
+                    } else if is_this_identifier(id) {
+                        let mut x = id.lexeme.chars();
+                        x.next();
+                        let temp_wrong_id = x.collect::<String>();
+                        eprintln!("Did you meant to write ={}", temp_wrong_id);
+                        exit(1);
+                    } else {
+                        //eprintln!()
+                        unknown_atom(id, &self.source, true);
+                    }
+                }
+                Atom::Number(_) => number_after_stdin(s, &self.source, true),
+            },
+            Expr::List(l) => {
+                //println!("{:?}" , expr_list)
+                if l.len() != 1 {
+                    multiple_exp_after_stdin(s, &self.source, true);
+                    //println!("Please provide a single assignment mew symbol for stdin input operation");
+                    //exit(1);
+                } else if let Expr::Atom(Atom::Sym(id)) = &l[0] {
+                    identifier_name = id.lexeme.clone();
+                } else if let Expr::Atom(Atom::Number(_)) = &l[0] {
+                    //eprintln!("I was not expecting a number here!");
+                    //exit(1);
+                    //
+                    number_after_stdin(s, &self.source, true);
+                }
+            }
+        }
 
-                        if !identifier_name.is_empty() {
-                            match io::stdin().read_line(&mut input_buffer) {
-                                Ok(_) => {}
-                                Err(_) => {
-                                    eprintln!("Failed to read the input from stdin!");
-                                    exit(1);
-                                }
-                            }
-                        }
-                        let temp_atom = Atom::Number((input_buffer.trim_end().len()) as f64);
-                        let temp_id_token = MewToken {
-                            lexeme: identifier_name,
-                            position: (0, (0, 0)),
-                        };
-                        self.do_assignment(&temp_id_token, &[temp_atom], symbol_table);
-
+        if !identifier_name.is_empty() {
+            match io::stdin().read_line(&mut input_buffer) {
+                Ok(_) => {}
+                Err(_) => {
+                    eprintln!("Failed to read the input from stdin!");
+                    exit(1);
+                }
+            }
+        }
+        let temp_atom = Atom::Number((input_buffer.trim_end().len()) as f64);
+        let temp_id_token = MewToken {
+            lexeme: identifier_name,
+            position: (0, (0, 0)),
+        };
+        self.do_assignment(&temp_id_token, &[temp_atom], symbol_table);
     }
 
+    fn evaluate_while_loop(
+        &mut self,
+        s: &MewToken,
+        expr_list: &mut Vec<Expr>,
+        symbol_table: &mut HashMap<String, f64>,
+    ) -> (Option<Atom>, Option<Vec<Atom>>) {
+        if expr_list.len() < 3 {
+            loop_arg_wrong(s, &self.source, true);
+
+            //exit(1);
+        }
+        let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
+        let mut condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+        let mut condition: f64 = if let Some(Atom::Number(n)) = condition_temp {
+            n
+        } else {
+            0.0
+        };
+
+        let body = expr_list.drain(..1).collect::<Vec<Expr>>();
+
+        if condition >= 1.0 {
+            loop {
+                self.evaluate(&mut body.clone()[0], symbol_table);
+
+                condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+                condition = if let Some(Atom::Number(n)) = condition_temp {
+                    n
+                } else {
+                    0.0
+                };
+
+                if condition == 0.0 {
+                    if !expr_list.is_empty() {
+                        let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
+                        return self.evaluate(&mut else_body[0], symbol_table);
+                    } else {
+                        return (None, None);
+                    }
+
+                    //break;
+                }
+            }
+        }
+
+        (None, None)
+    }
+
+    fn evaluate_if_expr(
+        &mut self,
+        s: &MewToken,
+        expr_list: &mut Vec<Expr>,
+        symbol_table: &mut HashMap<String, f64>,
+    ) -> (Option<Atom>, Option<Vec<Atom>>) {
+        if expr_list.len() < 3 {
+            if_arg_wrong(s, &self.source, true);
+            //exit(1);
+        }
+
+        let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
+        //println!("=> condition => {:?}" , con_expr[1]);
+        let condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
+        //println!("{:?}" , self.evaluate(&mut con_expr.clone()[1], symbol_table));
+        let condition: f64 = if let Some(Atom::Number(n)) = condition_temp {
+            n
+        } else {
+            0.0
+        };
+        //println!("=> {}" , condition);
+        let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
+        //println!("{:?}" , body);
+        if condition >= 1.0 {
+            return self.evaluate(&mut body[0], symbol_table);
+
+            //break;
+        } else if !expr_list.is_empty() {
+            let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
+            return self.evaluate(&mut else_body[0], symbol_table);
+        }
+        return (None, None);
+    }
 
     fn evaluate_list_expr(
         &mut self,
@@ -236,77 +324,12 @@ impl MewlEvaluator {
                 if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
                     if s.lexeme == *"|>" {
                         self.evaluate_stdin_expr(s, expr_list, symbol_table);
-                    }  
-                    else if s.lexeme == *"||>" {
+                    } else if s.lexeme == *"||>" {
                         self.evaluate_stdin_len_expr(s, expr_list, symbol_table);
-                    }
-                    else if s.lexeme == *"@" {
-                        if expr_list.len() < 3 {
-                            loop_arg_wrong(s, &self.source, true);
-
-                            //exit(1);
-                        }
-                        let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
-                        let mut condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
-                        let mut condition: f64 = if let Some(Atom::Number(n)) = condition_temp {
-                            n
-                        } else {
-                            0.0
-                        };
-
-                        let body = expr_list.drain(..1).collect::<Vec<Expr>>();
-
-                        if condition >= 1.0 {
-                            loop {
-                                self.evaluate(&mut body.clone()[0], symbol_table);
-
-                                condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
-                                condition = if let Some(Atom::Number(n)) = condition_temp {
-                                    n
-                                } else {
-                                    0.0
-                                };
-
-                                if condition == 0.0 {
-                                    if !expr_list.is_empty() {
-                                        let mut else_body =
-                                            expr_list.drain(..1).collect::<Vec<Expr>>();
-                                        return self.evaluate(&mut else_body[0], symbol_table);
-                                    } else {
-                                        return (None, None);
-                                    }
-
-                                    //break;
-                                }
-                            }
-                        }
+                    } else if s.lexeme == *"@" {
+                        return self.evaluate_while_loop(s, expr_list, symbol_table);
                     } else if s.lexeme == *"?" {
-                        if expr_list.len() < 3 {
-                            if_arg_wrong(s, &self.source, true);
-                            //exit(1);
-                        }
-
-                        let mut con_expr = expr_list.drain(..2).collect::<Vec<Expr>>();
-                        //println!("=> condition => {:?}" , con_expr[1]);
-                        let condition_temp = self.evaluate(&mut con_expr[1], symbol_table).0;
-                        //println!("{:?}" , self.evaluate(&mut con_expr.clone()[1], symbol_table));
-                        let condition: f64 = if let Some(Atom::Number(n)) = condition_temp {
-                            n
-                        } else {
-                            0.0
-                        };
-                        //println!("=> {}" , condition);
-                        let mut body = expr_list.drain(..1).collect::<Vec<Expr>>();
-                        //println!("{:?}" , body);
-                        if condition >= 1.0 {
-                            return self.evaluate(&mut body[0], symbol_table);
-
-                            //break;
-                        } else if !expr_list.is_empty() {
-                            let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
-                            return self.evaluate(&mut else_body[0], symbol_table);
-                        }
-                        //return (None,None)
+                        return self.evaluate_if_expr(s, expr_list, symbol_table);
                     }
                 }
                 for item in expr_list.iter_mut() {
