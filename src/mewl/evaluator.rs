@@ -310,7 +310,7 @@ impl MewlEvaluator {
             let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
             return self.evaluate(&mut else_body[0], symbol_table);
         }
-        return (None, None);
+        (None, None)
     }
 
     fn evaluate_list_expr(
