@@ -140,9 +140,8 @@ impl MewlEvaluator {
                                 lexeme: input_buffer.clone(),
                                 position: (0, (0, 0)),
                             };
-                            let mut temp_atom: Atom = Atom::Number(0.0);
-                            if is_this_mewnum(&temp_token) {
-                                temp_atom = Atom::Number(convert_from_mewnum(&temp_token.lexeme));
+                            let temp_atom: Atom = if is_this_mewnum(&temp_token) {
+                                Atom::Number(convert_from_mewnum(&temp_token.lexeme))
                             } else {
                                 let t = match input_buffer.parse::<f64>() {
                                     Ok(v) => v,
@@ -152,8 +151,8 @@ impl MewlEvaluator {
                                     }
                                 };
 
-                                temp_atom = Atom::Number(t);
-                            }
+                                Atom::Number(t)
+                            };
                             let temp_id_token = MewToken {
                                 lexeme: identifier_name,
                                 position: (0, (0, 0)),

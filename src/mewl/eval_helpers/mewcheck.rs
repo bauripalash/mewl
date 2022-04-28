@@ -1,24 +1,30 @@
 use crate::mewl::types::*;
 
+fn is_this_mewnum_string(lexeme: &str) -> bool {
+    let temp_token = MewToken {
+        lexeme: lexeme.to_string(),
+        position: (0, (0, 0)),
+    };
+    is_this_mewnum(&temp_token)
+}
+
 pub fn is_this_mewnum(token: &MewToken) -> bool {
     let mut token_lexeme = token.lexeme.chars();
     if token.lexeme.contains('.') {
-        let raw_mews: Vec<&str> = token.lexeme.split('.').collect();
-        if raw_mews.len() > 2 {
-            println!("Number contains multiple `.`s => {}", token.lexeme);
+        let mut raw_mews: Vec<&str> = token.lexeme.split('.').collect();
+        if raw_mews.len() < 2 {
             return false;
         }
+        if raw_mews[0].is_empty() {
+            raw_mews.drain(..1);
+        }
 
-        let first_part = raw_mews[0];
-        let sec_part = raw_mews[1];
-
-        return is_this_mewnum(&MewToken {
-            lexeme: first_part.to_string(),
-            position: (0, (0, 0)),
-        }) && is_this_mewnum(&MewToken {
-            lexeme: sec_part.to_string(),
-            position: (0, (0, 0)),
-        });
+        for rm in &raw_mews {
+            if !is_this_mewnum_string(rm) {
+                return false;
+            }
+        }
+        return true;
     } else {
         if token_lexeme.as_str().len() < 3 {
             return false;
