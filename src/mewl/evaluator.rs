@@ -158,20 +158,8 @@ impl MewlEvaluator {
 
     }
 
-
-    fn evaluate_list_expr(
-        &mut self,
-        expr_list: &mut Vec<Expr>,
-        symbol_table: &mut HashMap<String, f64>,
-    ) -> (Option<Atom>, Option<Vec<Atom>>) {
-        {
-            if !expr_list.is_empty() {
-                let mut atom_list: Vec<Atom> = vec![];
-                if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
-                    if s.lexeme == *"|>" {
-                        self.evaluate_stdin_expr(s, expr_list, symbol_table);
-                    }  
-                    else if s.lexeme == *"||>" {
+    fn evaluate_stdin_len_expr(&mut self , s : &MewToken , expr_list: &mut Vec<Expr> , symbol_table: &mut HashMap<String, f64>){
+            
                         if expr_list.len() != 2 {
                             //println!("{:?}", expr_list);
                             //eprintln!("Please provide a identifier to store the input");
@@ -233,7 +221,26 @@ impl MewlEvaluator {
                             position: (0, (0, 0)),
                         };
                         self.do_assignment(&temp_id_token, &[temp_atom], symbol_table);
-                    } else if s.lexeme == *"@" {
+
+    }
+
+
+    fn evaluate_list_expr(
+        &mut self,
+        expr_list: &mut Vec<Expr>,
+        symbol_table: &mut HashMap<String, f64>,
+    ) -> (Option<Atom>, Option<Vec<Atom>>) {
+        {
+            if !expr_list.is_empty() {
+                let mut atom_list: Vec<Atom> = vec![];
+                if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
+                    if s.lexeme == *"|>" {
+                        self.evaluate_stdin_expr(s, expr_list, symbol_table);
+                    }  
+                    else if s.lexeme == *"||>" {
+                        self.evaluate_stdin_len_expr(s, expr_list, symbol_table);
+                    }
+                    else if s.lexeme == *"@" {
                         if expr_list.len() < 3 {
                             loop_arg_wrong(s, &self.source, true);
 
