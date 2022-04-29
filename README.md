@@ -41,3 +41,4 @@ TODO: More examples
 
 TODO:: Add more
 ```
+[![Test](https://github.com/bauripalash/mewl/actions/workflows/rust.yml/badge.svg)](https://github.com/bauripalash/mewl/actions/workflows/rust.yml)
