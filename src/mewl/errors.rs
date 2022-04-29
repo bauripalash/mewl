@@ -8,7 +8,7 @@ const ERROR_LIST: [&str; 12] = [
     "Can not find correct number of arguments for this *if* expression", // [3] // if statement arguments wrong
     "No *expression(s)* provided after this Identifier to assign to it.", // [4] // no expression after identifier
     "Uh! I was not expecting a assignment here!", //[5] // unexpected assignment statement
-    "I cannot combine the *expressions* for this assignment operation", // [6] //failed to combine expression for assignment
+    "I cannot combine the *expressions* for this operation", // [6] //failed to combine expression for assignment
     "Please provide a assignment mew symbol after this read input function", // [7] //Read MewNum/Number from stdin
     "I was not expecting a number as argument for this read input function", // [8] Got a number argument for stdin function
     "Please only provide a single assignment expression as argument to stdin function", //[9] //got multiple expressions after stdin function
@@ -58,8 +58,12 @@ pub fn number_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
     }
 }
 
+/// When combining of expression fails
+    /// For example
+    /// ```[` mew mew]``` should be equal to 11.0
+    /// use this function when the evaluator fails to combine atoms
 pub fn expresion_combine_failed(token: &MewToken, code: &str, do_exit: bool) {
-    show_nice_error(token, code, ERROR_LIST[6].to_string());
+        show_nice_error(token, code, ERROR_LIST[6].to_string());
     if do_exit {
         exit(1);
     }

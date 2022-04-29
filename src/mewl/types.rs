@@ -16,7 +16,7 @@ pub struct MewToken {
     pub position: (usize, (usize, usize)), //[line number, [start position, end position ]]
 }
 
-pub const OPERATORS: [&str; 27] = [
+pub const OPERATORS: [&str; 28] = [
     "+",   //Addition
     "-",   //Substraction
     "*",   //Multiplication
@@ -44,4 +44,5 @@ pub const OPERATORS: [&str; 27] = [
     "&&",  //Bitwise AND
     "|>",  // take input
     "||>", // take input; return the length
+    "`" // Join atoms
 ];

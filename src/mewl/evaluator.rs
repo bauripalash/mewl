@@ -22,8 +22,10 @@ impl MewlEvaluator {
         }
     }
 
-    pub fn do_eval(&mut self) {
-        self.evaluate(&mut self.expression.clone(), &mut self.symbol_table.clone());
+    pub fn do_eval(&mut self) -> (Option<Atom>, Option<Vec<Atom>>) {
+        let res = self.evaluate(&mut self.expression.clone(), &mut self.symbol_table.clone());
+        //println!("{:?}" , res);
+        res
     }
 
     fn evaluate_atom_expr(
@@ -363,8 +365,8 @@ impl MewlEvaluator {
                             } else if is_this_assignment(symbol) {
                                 //check if assignment; mew number with `=`
                                 if !atom_list.is_empty() {
-                                    self.do_assignment(symbol, &atom_list, symbol_table);
-                                    return (Some(Atom::Number(0.0)), None); //return zero as like lisp; everything is an expression
+                                    //self.do_assignment(symbol, &atom_list, symbol_table);
+                                    return (Some(Atom::Number(self.do_assignment(symbol, &atom_list, symbol_table))), None); //return zero as like lisp; everything is an expression
                                 } else {
                                     no_expression_after_id(symbol, &self.source, true);
                                     /*
@@ -418,7 +420,7 @@ impl MewlEvaluator {
         identifer: &MewToken,
         atom: &[Atom],
         symbol_table: &mut HashMap<String, f64>,
-    ) {
+    ) -> f64 {
         // the argument we got will be something like `=mewmew` so, what we have to is convert it
         // to something like `~mewmew` , so it can be found on the symbol table later;
         let mut p_id: Vec<String> = identifer.lexeme.chars().map(|c| c.to_string()).collect();
@@ -465,5 +467,6 @@ impl MewlEvaluator {
         }
 
         symbol_table.insert(id, value);
+        value
     }
 }

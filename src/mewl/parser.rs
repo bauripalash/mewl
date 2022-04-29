@@ -91,7 +91,7 @@ impl MewlParser {
         output
     }
 
-    pub fn parse(&mut self) {
+    pub fn parse(&mut self, evaluate: bool) -> Option<Expr> {
         let mut mytoks = self.get_tokens();
         let mut token_list: Vec<Expr> = vec![];
         while !mytoks.is_empty() {
@@ -100,9 +100,13 @@ impl MewlParser {
         //let mut st: HashMap<String, f64> = HashMap::new();
         //st.insert("~mew".to_string(), 3.0);
         //
-        let mut evaluator = MewlEvaluator::new(Expr::List(token_list), self.source.clone());
-        evaluator.do_eval();
+        if evaluate {
+            let mut evaluator =
+                MewlEvaluator::new(Expr::List(token_list.clone()), self.source.clone());
+            evaluator.do_eval();
+        }
 
+        Some(Expr::List(token_list))
         //let _ = self.evaluate(&mut Expr::List(token_list), &mut st);
         //println!("{:?}" , a);
         //println!("{:#?}" , token_list);

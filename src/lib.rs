@@ -21,5 +21,5 @@ pub fn mewlrun(filename: String) {
         }
     };
 
-    let _ = mewl::parser::MewlParser::new(source_code).parse();
+    let _ = mewl::parser::MewlParser::new(source_code).parse(true);
 }
