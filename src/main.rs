@@ -1,19 +1,31 @@
-use std::{env::args, process::exit};
+use std::path::Path;
+
+use clap::{crate_authors, crate_version, Arg, Command};
+use console::style;
 
 use mewl::mewlrun;
 
 fn main() {
-    if args().len() < 2 {
-        eprintln!("Please provide a source file to execute");
-        exit(1);
-    } else {
-        let file_name = args().nth(1);
+    let mewl_args = Command::new("Mewl")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about("Mewl Programmming Language")
+        .arg(
+            Arg::new("script")
+                .takes_value(false)
+                .required(true)
+                .help("Mewl script to run"),
+        )
+        .get_matches();
 
-        if let Some(..) = file_name {
-            mewlrun(file_name.unwrap())
+    if let Some(a) = mewl_args.value_of("script") {
+        if Path::new(a).exists() {
+            mewlrun(a.to_string())
         } else {
-            println!("[Err!] source file name is empty/invalid!");
-            exit(1);
+            eprintln!(
+                "Err , script file `{}` is invalid or can not be found!",
+                style(a).magenta().bold().for_stderr()
+            );
         }
     }
 }

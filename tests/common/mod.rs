@@ -12,7 +12,7 @@ pub fn get_return_value(source: &str) -> f64 {
             _ => panic!(),
         }
     } else if m.1.is_some() && m.0.is_none() {
-        println!("{:?}" , m.1);
+        println!("{:?}", m.1);
         match m.1.unwrap()[0] {
             Atom::Number(n) => n,
             _ => panic!(),

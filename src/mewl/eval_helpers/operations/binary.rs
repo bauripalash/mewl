@@ -131,12 +131,15 @@ pub fn do_binary_operation(op_token: &MewToken, exp_args: Vec<Atom>, source: &st
         }
 
         "`" => {
-            let x : Vec<String> = extracted_atom_list.iter().flatten().map(|item| item.abs().floor().to_string()).collect();
-            match x.join("").parse::<f64>(){
+            let x: Vec<String> = extracted_atom_list
+                .iter()
+                .flatten()
+                .map(|item| item.abs().floor().to_string())
+                .collect();
+            match x.join("").parse::<f64>() {
                 Ok(v) => result = v,
-                Err(_) => expresion_combine_failed(op_token, source, false)
+                Err(_) => expresion_combine_failed(op_token, source, false),
             }
-            
         }
 
         "::" => {

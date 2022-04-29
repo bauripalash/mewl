@@ -2,7 +2,10 @@
 name = "mewl"
 version = "0.1.0"
 edition = "2021"
+authors = ["Palash Bauri <palashbauri1@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+console = "0.15.0"
+clap = {version = "3.1.12" , features=["cargo"]}

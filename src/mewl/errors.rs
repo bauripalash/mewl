@@ -1,6 +1,6 @@
 use crate::mewl::types::*;
+use console::Style;
 use std::process::exit;
-
 const ERROR_LIST: [&str; 12] = [
     "Sorry! I don't know the value of this variable!", // [0] //Undefined variable
     "Uh! I can't recognize this symbol! What to do with this?", // [1] //Unexpected symbol/char/atom
@@ -59,11 +59,11 @@ pub fn number_after_stdin(token: &MewToken, code: &str, do_exit: bool) {
 }
 
 /// When combining of expression fails
-    /// For example
-    /// ```[` mew mew]``` should be equal to 11.0
-    /// use this function when the evaluator fails to combine atoms
+/// For example
+/// ```[` mew mew]``` should be equal to 11.0
+/// use this function when the evaluator fails to combine atoms
 pub fn expresion_combine_failed(token: &MewToken, code: &str, do_exit: bool) {
-        show_nice_error(token, code, ERROR_LIST[6].to_string());
+    show_nice_error(token, code, ERROR_LIST[6].to_string());
     if do_exit {
         exit(1);
     }
@@ -134,6 +134,8 @@ pub fn nice_error_atom_list(atom_list: &[Atom], source_code: &str, err_msg: Stri
 }
 
 fn show_nice_error(tok: &MewToken, source_code: &str, err_msg: String) {
+    let error_msg_color = Style::new().magenta().bold().for_stderr();
+    let error_token_color = Style::new().yellow().for_stderr();
     let mut xx = source_code.to_string(); //cloning the source cause I don't want to mess up the origin source;
                                           // the parser maybe able to catch other error; so source should not be mutated; I guess;
 
@@ -142,17 +144,20 @@ fn show_nice_error(tok: &MewToken, source_code: &str, err_msg: String) {
     //the token highlight is also including the `\n`
     let newline_next =
         xx.chars().map(|s| s.to_string()).collect::<Vec<String>>()[tok.position.1 .1 - 1] == "\n";
-
+    //xx = format!("{}" , style(xx).cyan());
+    //
     xx.insert_str(
         if newline_next {
             tok.position.1 .1 - 1
         } else {
             tok.position.1 .1
         },
-        " <-\x1b[0m",
+        format!(" {}", error_token_color.apply_to(" <== ")).as_str(),
     );
-
-    xx.insert_str(tok.position.1 .0 - 1, " \x1b[96;1m-> ");
+    xx.insert_str(
+        tok.position.1 .0 - 1,
+        format!("{}", error_token_color.apply_to(" ==> ")).as_str(),
+    );
 
     let o: Vec<String> = xx
         .split_terminator('\n')
@@ -168,7 +173,7 @@ fn show_nice_error(tok: &MewToken, source_code: &str, err_msg: String) {
     }
 
     if !err_msg.is_empty() {
-        eprintln!("\x1b[95m[Eh!] : {} \x1b[0m\n", err_msg);
+        eprintln!("{}\n", error_msg_color.apply_to(err_msg));
     }
 
     //line before the error line

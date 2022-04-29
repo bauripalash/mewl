@@ -23,9 +23,10 @@ impl MewlEvaluator {
     }
 
     pub fn do_eval(&mut self) -> (Option<Atom>, Option<Vec<Atom>>) {
-        let res = self.evaluate(&mut self.expression.clone(), &mut self.symbol_table.clone());
+        
+        self.evaluate(&mut self.expression.clone(), &mut self.symbol_table.clone()) 
         //println!("{:?}" , res);
-        res
+        //res
     }
 
     fn evaluate_atom_expr(
@@ -366,7 +367,14 @@ impl MewlEvaluator {
                                 //check if assignment; mew number with `=`
                                 if !atom_list.is_empty() {
                                     //self.do_assignment(symbol, &atom_list, symbol_table);
-                                    return (Some(Atom::Number(self.do_assignment(symbol, &atom_list, symbol_table))), None); //return zero as like lisp; everything is an expression
+                                    return (
+                                        Some(Atom::Number(self.do_assignment(
+                                            symbol,
+                                            &atom_list,
+                                            symbol_table,
+                                        ))),
+                                        None,
+                                    ); //return zero as like lisp; everything is an expression
                                 } else {
                                     no_expression_after_id(symbol, &self.source, true);
                                     /*
