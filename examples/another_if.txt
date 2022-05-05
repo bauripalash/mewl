@@ -1,6 +1,6 @@
 // numbers 
 
 [=mew mewmew]
-[@ [!= ~mew [` mew mew]]
+[@ [!= ~mew [' mew mew]]
 [[? [== [% ~mew mewmew] [- mew mew]] [:: ~mew]][=mew [+ ~mew mew]]]
 ]

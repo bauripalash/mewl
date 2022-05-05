@@ -4,9 +4,9 @@
 [:: [+ mew mewmew [ - mew mewmew mewmew mewmew] ]] //print -2 [2 + [1 - 2 - 2 - 2]]
 [:: [- mew mew]] //print 0
 
-[:: [+ [` mew mew mew] [` mew mewmew]]] //111+12; print 123
-[:: [- mew mewmew [- [` mewmew mewmew] mewmew ]]] // print -21
+[:: [+ [' mew mew mew] [' mew mewmew]]] //111+12; print 123
+[:: [- mew mewmew [- [' mewmew mewmew] mewmew ]]] // print -21
 
 [:: [+ mewmew.mew mew.mewmew.mew]] // 2.1 + 1.21
-[:: [* [` mewmew mewmew mewmew] [` mewmewmew mewmewmew mewmewmew ]]] //222*333
+[:: [* [' mewmew mewmew mewmew] [' mewmewmew mewmewmew mewmewmew ]]] //222*333
 [:: [/ mewmew mewmewmew]] //1.5
