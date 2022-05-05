@@ -130,7 +130,7 @@ pub fn do_binary_operation(op_token: &MewToken, exp_args: Vec<Atom>, source: &st
             };
         }
 
-        "`" => {
+        "'" => {
             let x: Vec<String> = extracted_atom_list
                 .iter()
                 .flatten()

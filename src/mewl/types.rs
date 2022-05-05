@@ -44,5 +44,5 @@ pub const OPERATORS: [&str; 28] = [
     "&&",  //Bitwise AND
     "|>",  // take input
     "||>", // take input; return the length
-    "`",   // Join atoms
+    "'",   // Join atoms
 ];
