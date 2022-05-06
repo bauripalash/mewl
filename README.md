@@ -14,6 +14,39 @@ Again in, March 2022, I started experimenting with mewmew lanugage but with lisp
 
 ## 🎉 Get Started
 
+### Read Documention
+
+[The Mewl Book](https://bauripalash.github.io/mewlbook)
+
+### Hello World
+
+```lisp
+[=mew [[+[* mewmewmew mewmew] mew] mewmew] ] //H
+[=mewmew [mew [- mew mew] mew]] //e
+[=mewmewmew [mew [- mew mew] [* mewmewmewmew mewmew]]] //l
+[=mewmewmewmew [mew mew mew]] //o
+[=mewmewmewmewmew [mewmewmew mewmew]] //SPACE
+[=mewmewmewmewmewmew [[* mewmewmewmew mewmew] mewmewmewmewmewmewmew]] //W
+[=mewmewmewmewmewmewmew [mew mew mewmewmewmew]] //r
+[=mewmewmewmewmewmewmewmew [mew [- mew mew] [- mew mew]]] //d
+[=mewmewmewmewmewmewmewmewmew [mewmewmew mewmewmew]] //!
+
+[::: ~mew //H
+~mewmew //e
+~mewmewmew //l
+~mewmewmew //l
+~mewmewmewmew //o
+~mewmewmewmewmew //SPACE 
+~mewmewmewmewmewmew //W
+~mewmewmewmew //o
+~mewmewmewmewmewmewmew //r
+~mewmewmew //l
+~mewmewmewmewmewmewmewmew //d
+~mewmewmewmewmewmewmewmewmew //!
+]
+
+```
+
 ### Basic Syntax
 
 ```lisp
@@ -26,10 +59,13 @@ Again in, March 2022, I started experimenting with mewmew lanugage but with lisp
 (:: [+ mew mew]) ;; prints 2
 ;; :: -> is a symbol/function to print the next atoms/expressions to stdout
 
-TODO: More examples
+For more, Read Docs
+
+
+
 ```
 
-## Some builtin capabilities
+### Some operations
 
 ```lisp
 + -> Addition
@@ -39,6 +75,10 @@ TODO: More examples
 :: -> Print to stdout
 ::: -> Assumes next expressions/atom as byte value. convert them to string, including invalid chars and prints to stdout
 
-TODO:: Add more
+
+Learn more on Docs.
 ```
+
+
+
 [![Test](https://github.com/bauripalash/mewl/actions/workflows/rust.yml/badge.svg)](https://github.com/bauripalash/mewl/actions/workflows/rust.yml)
