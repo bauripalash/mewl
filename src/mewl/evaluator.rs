@@ -267,11 +267,11 @@ impl MewlEvaluator {
                 };
 
                 if condition == 0.0 {
-                    if !expr_list.is_empty() {
+                    if expr_list.is_empty() {
+                        return (None, None);
+                    } else {
                         let mut else_body = expr_list.drain(..1).collect::<Vec<Expr>>();
                         return self.evaluate(&mut else_body[0], symbol_table);
-                    } else {
-                        return (None, None);
                     }
 
                     //break;
@@ -322,7 +322,9 @@ impl MewlEvaluator {
         symbol_table: &mut HashMap<String, f64>,
     ) -> (Option<Atom>, Option<Vec<Atom>>) {
         {
-            if !expr_list.is_empty() {
+            if expr_list.is_empty() {
+                (None, None)
+            } else {
                 let mut atom_list: Vec<Atom> = vec![];
                 if let Expr::Atom(Atom::Sym(s)) = &expr_list.clone()[0] {
                     if s.lexeme == *"|>" {
@@ -346,7 +348,9 @@ impl MewlEvaluator {
                     }
                 }
 
-                if !atom_list.is_empty() {
+                if atom_list.is_empty() {
+                    (None, None)
+                } else {
                     let clone_of_atom_list = atom_list.clone();
                     let current_operator: Vec<Atom> = atom_list.drain(..1).collect();
 
@@ -365,17 +369,7 @@ impl MewlEvaluator {
                             //or an error has been thrown
                             } else if is_this_assignment(symbol) {
                                 //check if assignment; mew number with `=`
-                                if !atom_list.is_empty() {
-                                    //self.do_assignment(symbol, &atom_list, symbol_table);
-                                    return (
-                                        Some(Atom::Number(self.do_assignment(
-                                            symbol,
-                                            &atom_list,
-                                            symbol_table,
-                                        ))),
-                                        None,
-                                    ); //return zero as like lisp; everything is an expression
-                                } else {
+                                if atom_list.is_empty() {
                                     no_expression_after_id(symbol, &self.source, true);
                                     /*
                                         self.show_nice_error(
@@ -385,6 +379,16 @@ impl MewlEvaluator {
                                     )
                                     ;*/
                                     //exit(1);
+                                } else {
+                                    //self.do_assignment(symbol, &atom_list, symbol_table);
+                                    return (
+                                        Some(Atom::Number(self.do_assignment(
+                                            symbol,
+                                            &atom_list,
+                                            symbol_table,
+                                        ))),
+                                        None,
+                                    ); //return zero as like lisp; everything is an expression
                                 }
                             } else {
                                 unknown_atom(symbol, &self.source, true);
@@ -400,11 +404,7 @@ impl MewlEvaluator {
                     }
 
                     self.evaluate(&mut expr_list[0], symbol_table)
-                } else {
-                    (None, None)
                 }
-            } else {
-                (None, None)
             }
         }
     }
