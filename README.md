@@ -82,3 +82,8 @@ Learn more on Docs.
 
 
 [![Test](https://github.com/bauripalash/mewl/actions/workflows/rust.yml/badge.svg)](https://github.com/bauripalash/mewl/actions/workflows/rust.yml)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbauripalash%2Fmewl.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbauripalash%2Fmewl?ref=badge_shield)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fbauripalash%2Fmewl.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fbauripalash%2Fmewl?ref=badge_large)
